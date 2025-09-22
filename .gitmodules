@@ -1,0 +1,3 @@
+[submodule "MegaSWAP"]
+	path = MegaSWAP
+	url = https://github.com/HendrikKok/MegaSWAP
