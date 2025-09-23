@@ -1,0 +1,1 @@
+D:\leander\MetaSWAP\sss\git\UZ_SequentialSteadyState\sss_fortran\netcdf\x64\Release\netcdf4.lib
