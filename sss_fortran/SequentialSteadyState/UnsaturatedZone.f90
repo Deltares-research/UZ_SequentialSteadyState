@@ -30,7 +30,8 @@ implicit none
         procedure, pass :: gamma2gwl         => t_unsa_gamma2gwl           ! given a groundwater level index, return groundwater level
         procedure, pass :: gamma2storage     => t_unsa_gamma2storage       ! given a groundwater level index, return total storage in column
         procedure, pass :: get_sc1           => t_unsa_get_sc1             ! given a groundwater level index, estimage storage coefficient
-        procedure, pass :: get_theta         => t_unsa_get_moisture_content! convert the sv-values to non-dimensional moisture content
+!       procedure, pass :: get_theta         => t_unsa_get_moisture_content! convert the sv-values to non-dimensional moisture content
+        procedure, pass :: get_storage       => t_unsa_get_storage         ! get current storage volume sv per box
         procedure, pass :: get_phead         => t_unsa_get_pressure_head   ! derive the real pressure heads for boxes
     end type t_unsa
     
@@ -109,9 +110,8 @@ contains
         lphi = lbound(uz%unsa_db%svtb, dim=3)
 
         do ibox=1, uz%maxbox
-            uz%phi(ibox) = phead2ndx(uz%phead(ibox),uz%unsa_db%ddpptb)
+!           uz%phi(ibox) = phead2ndx(uz%phead(ibox),uz%unsa_db%ddpptb)
             gam_local = uz%gam ! Deze staat niet goed RL666 de gamma waardes nu zelfde !
-            ! tbd: ig_local, gw level with largest qmr flux, adjust local
             if (ibox==1) then
                 qin = -qrch
             else
@@ -124,18 +124,22 @@ contains
             else
                 uz%phead(ibox) = -(10**(uz%phi(ibox)*uz%unsa_db%ddpptb))/m2cm
             endif
-            uz%sv(ibox) = bilinear(uz%unsa_db%svtb(ibox,:,:),gam_local,uz%phi(ibox),lgam,lphi)
+
             if (ibox==1) then
                uz%qmv(ibox) = (uz%sv(ibox) - uz%sv0(ibox))/uz%dt - qrch
             else
                uz%qmv(ibox) = (uz%sv(ibox) - uz%sv0(ibox))/uz%dt + uz%qmv(ibox-1) 
             endif
+
+            uz%sv(ibox) = bilinear(uz%unsa_db%svtb(ibox,:,:),gam_local,uz%phi(ibox),lgam,lphi)
+
+            uz%qmv(ibox) = (uz%sv(ibox) - uz%sv0(ibox))/uz%dt + qin
         enddo
         dsv = (sum(uz%sv(1:uz%maxbox))-sum(uz%sv0(1:uz%maxbox)))
 
         ! default head, gwl dependend, for submerged boxes 
-        uz%phead(uz%maxbox+1:) = (gwl - uz%top) + 0.5 * uz%unsa_db%dprzsl
-        !uz%phead(:) = (gwl-uz%top) + 0.5 * uz%unsa_db%dprzsl   ! default pressure head submerged boxes
+        uz%phead(uz%maxbox+1:) = (gwl - uz%top) + 0.5_hp * uz%unsa_db%dprzsl
+        !uz%phead(:) = (gwl-uz%top) + 0.5_hp * uz%unsa_db%dprzsl   ! default pressure head submerged boxes
     end function t_unsa_update
 
     function t_unsa_gamma2storage(uz, gam) result (stotal)
@@ -159,10 +163,10 @@ contains
         real(kind=hp)  :: sc1 
         class(t_unsa), intent(inout) :: uz
         real(kind=hp) ::sv0, sv1, gwl0, gwl1, gamma, dgamma
-        real(kind=hp), parameter :: sc1_min = 1.e-04
+        real(kind=hp), parameter :: sc1_min = 1.e-04_hp
         real(kind=hp) :: gamma0, gamma1,lgam, ugam
         logical, parameter :: newinterp = .True.
-        dgamma = 0.5d0
+        dgamma = 0.5_hp
 
         if (newinterp) then
            lgam = real(lbound(uz%unsa_db%dpgwtb,dim=1))
@@ -175,7 +179,7 @@ contains
            gwl1 = uz%gamma2gwl(gamma1)
         else
            gamma0 = floor(gamma)
-           gamma1 = gamma0 + 1.d0
+           gamma1 = gamma0 + 1._hp
            sv0 = uz%gamma2storage(gamma0)
            sv1 = uz%gamma2storage(gamma1)
            gwl0 = uz%gamma2gwl(gamma0)
@@ -189,7 +193,6 @@ contains
             sc1 = sc1_min
         endif
     end function t_unsa_get_sc1
-
 
     subroutine t_unsa_set_db(uz, dbptr)
         class(t_unsa), intent(inout) :: uz
@@ -214,7 +217,7 @@ contains
         enddo
 
         ! update storage fluxes qmv
-        uz%qmv(:) = 0.d0
+        uz%qmv(:) = 0._hp
         uz%qmv(nbox) = qmodf
         uz%qmv(nbox-1) = -(uz%sv(nbox) - uz%sv0(nbox)) / uz%dt + qmodf
         do ibox=nbox-2,1,-1
@@ -251,16 +254,27 @@ contains
         enddo
     end function t_unsa_nonsubmerged
 
-    subroutine t_unsa_get_moisture_content(uz, theta_box)
+!   subroutine t_unsa_get_moisture_content(uz, theta_box)
+!       class(t_unsa), intent(inout) :: uz
+!       real(kind=hp), intent(out)   :: theta_box(:)
+!       integer :: ibox, lgam, lphi
+!       lgam = lbound(uz%unsa_db%thetatb,dim=2)
+!       lphi = lbound(uz%unsa_db%thetatb,dim=3)
+!       do ibox=1,min(size(theta_box),uz%nbox)
+!          theta_box(ibox) = bilinear(uz%unsa_db%thetatb(ibox,:,:),uz%gam,uz%phi(ibox),lgam,lphi)
+!       enddo
+!   end subroutine t_unsa_get_moisture_content
+
+    subroutine t_unsa_get_storage(uz, sv_box)
         class(t_unsa), intent(inout) :: uz
-        real(kind=hp), intent(out)   :: theta_box(:)
+        real(kind=hp), intent(out)   :: sv_box(:)
         integer :: ibox, lgam, lphi
         lgam = lbound(uz%unsa_db%thetatb,dim=2)
         lphi = lbound(uz%unsa_db%thetatb,dim=3)
-        do ibox=1,min(size(theta_box),uz%nbox)
-           theta_box(ibox) = bilinear(uz%unsa_db%thetatb(ibox,:,:),uz%gam,uz%phi(ibox),lgam,lphi)
+        do ibox=1,min(size(sv_box),uz%nbox)
+           sv_box(ibox) = bilinear(uz%unsa_db%svtb(ibox,:,:),uz%gam,uz%phi(ibox),lgam,lphi)
         enddo
-    end subroutine t_unsa_get_moisture_content
+    end subroutine t_unsa_get_storage
 
     subroutine t_unsa_get_pressure_head(uz, phead_box)
         class(t_unsa), intent(inout) :: uz

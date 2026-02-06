@@ -7,7 +7,7 @@ implicit none
 type :: t_results
    integer :: nbox, nnod
    real(kind=hp), allocatable :: h(:), th(:), thbox(:), phi(:), thnode(:), phnode(:) 
-   logical, allocatable       :: submerged(:)
+   integer, allocatable       :: submerged(:)
    character(len=:), allocatable :: dbpath
    real(kind=hp)              :: sc1, qbot, qrot, qrch, qrun, gwl, pond, qmodf, qrain, peva, reva(2), gamma
 
@@ -109,7 +109,6 @@ subroutine t_dumpnc_init(self, fnout, nbox, nnod, nod2box, znode, param, unsa_db
    self%ierr = nf90_put_att(self%ncid, varid_settings, 'init_gwl', param%init_gwl)
    self%ierr = nf90_put_att(self%ncid, varid_settings, 'init_phead', param%init_phead)
    self%ierr = nf90_put_att(self%ncid, varid_settings, 'zmax_ponding', param%zmax_ponding)
-   self%ierr = nf90_put_att(self%ncid, varid_settings, 'soil_resist', param%soil_resist)
    self%ierr = nf90_put_att(self%ncid, varid_settings, 'niter', param%niter)
    self%ierr = nf90_put_att(self%ncid, varid_settings, 'maxinf', param%maxinf)
 

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectType="typeDynamicLibrary" ProjectCreator="Intel Fortran" Keyword="Dll" Version="11.0" ProjectIdGuid="{44008479-B645-4CBD-B889-67B22573795D}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/>
+	</Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32" UseCompiler="ifortCompiler" ConfigurationType="typeDynamicLibrary">
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\bmi" PreprocessorDefinitions="IFORT;  INCLUDE_METASWAP; INCLUDE_MOZART" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(OSS_UCRTLIBDIR)" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool" CommandLine="xcopy /Y/Q ..\..\ossdeltares\MPICHDLL\*.dll $(OutDir)"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
+		<Configuration Name="Release|Win32" UseCompiler="ifortCompiler" ConfigurationType="typeDynamicLibrary">
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\bmi" PreprocessorDefinitions="IFORT;  INCLUDE_METASWAP; INCLUDE_MOZART"/>
+			<Tool Name="VFLinkerTool" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(OSS_UCRTLIBDIR)" SubSystem="subSystemWindows" LinkDLL="true"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool" CommandLine="xcopy /Y/Q ..\..\ossdeltares\MPICHDLL\*.dll $(OutDir)"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
+		<Configuration Name="Debug|x64" UseCompiler="ifortCompiler" OutputDirectory="D:\leander\imod_collector\seqsteadystate" TargetName="SeqSteadyState" ConfigurationType="typeDynamicLibrary">
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\bmi" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(OSS_UCRTLIBDIR);..\..\tools\netcdf\netCDF 4.6.1\lib\" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="netcdf.lib"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
+		<Configuration Name="Release|x64" UseCompiler="ifortCompiler" OutputDirectory="D:\leander\imod_collector\seqsteadystate" TargetName="SeqSteadyState" ConfigurationType="typeDynamicLibrary">
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeDisabled" HeapArrays="0" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\bmi" PreprocessorDefinitions="IFORT;  INCLUDE_METASWAP; INCLUDE_MOZART"/>
+			<Tool Name="VFLinkerTool" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(OSS_UCRTLIBDIR);..\..\modmsw\ttutil\netcdf\netCDF 4.6.1\lib\" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="..\..\ossdeltares\MPICH64LIB\fmpich2.lib netcdf.lib"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
+	</Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd"/>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+			<File RelativePath="..\bmi\bmi.f90">
+			</File>
+			<File RelativePath="..\SequentialSteadyState\database_io.f90">
+			</File>
+			<File RelativePath="..\SequentialSteadyState\database_utils.f90"/>
+			<File RelativePath="..\SequentialSteadyState\downscaling.f90">
+			</File>
+			<File RelativePath="..\SequentialSteadyState\globals.f90">
+			</File>
+			<File RelativePath="..\SequentialSteadyState\ponding.f90"/>
+			<File RelativePath="..\SequentialSteadyState\SequentialSteadyState.f90">
+			</File>
+			<File RelativePath=".\SequentialSteadyState_bmi.f90">
+			</File>
+			<File RelativePath="..\SequentialSteadyState\sss_comp.f90">
+			</File>
+			<File RelativePath="..\SequentialSteadyState\UnsaturatedZone.f90">
+			</File>
+		</Filter>
+		<File RelativePath=".\ReadMe.txt"/>
+	</Files>
+	<Globals/>
+</VisualStudioProject>

@@ -2,9 +2,9 @@ module globals
 implicit none
         integer, parameter :: hp=8
 
-        real(kind=hp), parameter :: DMISS  = -999.        
-        real(kind=hp)            :: m2cm = 100.
-        real(kind=hp)            :: eps = 0.1e-6
+        real(kind=hp), parameter :: DMISS  = -999._hp        
+        real(kind=hp)            :: m2cm = 100._hp
+        real(kind=hp)            :: eps = 0.1e-6_hp
 
     interface realloc
         module procedure realloc1d_real

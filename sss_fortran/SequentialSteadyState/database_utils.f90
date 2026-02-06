@@ -38,9 +38,10 @@ contains
         logical :: ja_min, ja_plus, do_min, do_plus
         integer :: imaximum, iminimum
 
-        tol = 0.01*eps   ! todo: obtain a reasonable tolerance
-        tol = 0.0001*eps ! todo: obtain a reasonable tolerance
-        tol = 0.d0       ! zero tolerance ! 
+        tol = 0._hp         ! zero tolerance ! 
+        tol = 0.0001_hp*eps ! todo: obtain a reasonable tolerance
+        tol = eps           ! todo: obtain a reasonable tolerance
+        tol = 0.01_hp*eps   ! todo: obtain a reasonable tolerance
 
         ! do not change index when change in x1 within tolerance 
         x0=linear1(xtb,c0,s1) 
@@ -53,9 +54,9 @@ contains
         imaximum = ubound(xtb,dim=1)
         ix = floor(c0)
 
-        if ((x1-xtb(ubound(xtb,1)))*(x1-xtb(lbound(xtb,1)))>=0.) then
+        if ((x1-xtb(ubound(xtb,1)))*(x1-xtb(lbound(xtb,1)))>=0._hp) then
             c1 = c0
-        elseif ((x1-xtb(ix+1))*(x1-xtb(ix))<=0.) then
+        elseif ((x1-xtb(ix+1))*(x1-xtb(ix))<=0._hp) then
             if (abs(xtb(ix+1)-xtb(ix))>eps) then
                 c1 = real(ix) + (x1-xtb(ix))/(xtb(ix+1)-xtb(ix))
             else
@@ -73,12 +74,12 @@ contains
                (.not.(ja_min.or.ja_plus)))              ! not yet found an interval in any direction
                if (do_plus) then
                   iplus = iplus + 1 
-                  ja_plus = ((x1-xtb(iplus-1))*(x1-xtb(iplus))<=0)
+                  ja_plus = ((x1-xtb(iplus-1))*(x1-xtb(iplus))<=0._hp)
                   do_plus = (iplus<imaximum)
                endif
                if (do_min) then
                   imin = imin - 1 
-                  ja_min = ((x1-xtb(imin+1))*(x1-xtb(imin))<=0)
+                  ja_min = ((x1-xtb(imin+1))*(x1-xtb(imin))<=0._hp)
                   do_min = (imin>iminimum)
                endif
             enddo
@@ -128,14 +129,14 @@ contains
         sgn=sign(1.,xtb(i2)-xtb(i1))     ! -1. for descending, 1. for ascending x
         if ((x1-xtb(i2))*sgn>0.d0) then  ! beyond the table upper bound, 
            ix = i2-1                     ! take the one-but-highest index
-           fix = 1.d0                    ! set weight to 1
-        elseif ((x1-xtb(i1))*sgn<0.d0) then 
+           fix = 1._hp                   ! set weight to 1
+        elseif ((x1-xtb(i1))*sgn<0._hp) then 
            ix = i1                       ! take the lowest index
            fix = 0.d0                    ! set weight to 0
         else
            do while(i2-i1>1)   ! narrow the interval, bisection-wise
               ix=floor((i1+i2)/2.)
-              if ((xtb(ix)-x1)*(xtb(i2)-x1)>0) then
+              if ((xtb(ix)-x1)*(xtb(i2)-x1)>0._hp) then
                  i2=ix
               else
                  i1=ix
@@ -143,7 +144,7 @@ contains
            enddo
            ix = min(i1,i2)     ! take the midpoint of the resulting interval as final index
            if (abs(xtb(ix+1)-xtb(ix))<eps) then      ! protection against zero division
-              fix = 0.d0
+              fix = 0._hp
            else 
               fix=(x1-xtb(ix))/(xtb(ix+1)-xtb(ix))   ! use the obtained index, derive the fraction
            endif
@@ -195,10 +196,10 @@ contains
         real(kind=hp), intent(in)  :: fx, fy
         integer,       intent(in)  :: sx, sy
         real(kind=hp), intent(in)  :: tb(sx:,sy:)
-        z = (1.-fx)*(1.-fy)*tb(ix  ,iy  ) &
-          +     fx *(1.-fy)*tb(ix+1,iy  ) &
-          + (1.-fx)*    fy *tb(ix  ,iy+1) &
-          +     fx *    fy *tb(ix+1,iy+1)
+        z = (1._hp-fx) * (1._hp-fy) * tb(ix  ,iy  ) &
+          +        fx  * (1._hp-fy) * tb(ix+1,iy  ) &
+          + (1._hp-fx) *        fy  * tb(ix  ,iy+1) &
+          +        fx  *        fy  * tb(ix+1,iy+1)
     end function bilinear4
 
 end module database_utils

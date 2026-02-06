@@ -13,6 +13,7 @@ integer, parameter :: NMAXRZ = 31
         character(len=:),allocatable             :: unsa_path
         real(kind=hp),    allocatable            :: rzdepth(:)
         type(t_databaseptr), allocatable         :: dbs(:,:)             ! 2D-array of pointers to database instances
+        integer                                  :: nbox = 0
     contains
         procedure, pass :: readNCset => t_databaseSet_readNCset          ! Read database contents from netCDF4 files
         procedure, pass :: getDbPtr => t_databaseSet_getDbPtr            ! Return pointer to database instance within database set
@@ -132,10 +133,11 @@ contains
                  endif
                  db%dbpath = filname
                  ! ToDo:check if root zone depth of the file matches with the expected depth
-                 if (abs(db%dprzsl-dbset%rzdepth(rz))>1.d-3) then
+                 if (abs(db%dprzsl-dbset%rzdepth(rz))>1.e-3_hp) then
                     ! non-matching rz 
                  endif
                  dbset%dbs(rz,spu)%ptr => db
+                 dbset%nbox = max(dbset%nbox,db%nbox)
                  db%irz = rz
                  db%spu = spu
               endif
@@ -233,7 +235,7 @@ contains
         ierr = nf90_get_var(ncid, varid_dpgw, db%dpgwtb(:))
         ierr = nf90_get_var(ncid, varid_qmr, db%qmrtb(:,:))
 
-        db%hbotb(0) = 0.d0
+        db%hbotb(0) = 0._hp
         db%hbotb(1) = db%hbotb(0) - db%dprzsl
         db%hbotb(2) = db%hbotb(1) - db%dpczsl
         ierr = make_ptb_values(db) 
@@ -254,7 +256,7 @@ contains
            db%ptb(ip)=-ip*db%ddpptb
         enddo
         do ip=1,nuip
-           db%ptb(ip)=-10.d0**(ip*db%ddpptb)/m2cm
+           db%ptb(ip)=-10._hp**(ip*db%ddpptb)/m2cm
         enddo
     end function make_ptb_values
 
@@ -275,7 +277,7 @@ contains
         if (.not.allocated(sv1d)) then
             allocate(sv1d(lbound(db%qmrtb,dim=2):ubound(db%qmrtb,dim=2)))
         endif
-        sv1d = (db%svtb(ibox,ig,:) * (1.d0-fig) + db%svtb(ibox,ig+1,:) * fig) 
+        sv1d = (db%svtb(ibox,ig,:) * (1._hp-fig) + db%svtb(ibox,ig+1,:) * fig) 
         phi = ix_fix(sv1d,sv,phi,lbound(sv1d,dim=1),default=default)
 !       phi = ix_fix(sv1d,sv,lbound(sv1d,dim=1),default=default)
     end subroutine t_database_sv2phi
@@ -298,8 +300,8 @@ contains
         if (.not.allocated(sigma1d)) then
             allocate(sigma1d(lbound(db%qmrtb,dim=2):ubound(db%qmrtb,dim=2)))
         endif
-        sigma1d = (db%svtb(ibox,ig,:)   - (db%qmrtb(ig,:)))   * (1.d0-fig) &
-                + (db%svtb(ibox,ig+1,:) - (db%qmrtb(ig+1,:))) * fig
+        sigma1d = (db%svtb(ibox,ig,:)   - (db%qmrtb(ig,:))*dtgw)   * (1._hp-fig) &
+                + (db%svtb(ibox,ig+1,:) - (db%qmrtb(ig+1,:))*dtgw) * fig
         phi = ix_fix(sigma1d,sigma,phi,lbound(sigma1d,dim=1),default=default)
 !       phi = ix_fix(sigma1d,sigma,lbound(sigma1d,dim=1),default=default)
     end subroutine t_database_sigma2phi
@@ -319,7 +321,7 @@ contains
                           floor((dpgw + eps) / db%ddgwtb)))
            igk = db%igdc(index)
            figk = (dpgw - db%dpgwtb(igk)) / (db%dpgwtb(igk+1) - db%dpgwtb(igk))
-           figk = min(1.d0, max(0.d0, figk))
+           figk = min(1._hp, max(0._hp, figk))
            gamma = figk + igk
         endif
     end function t_database_dpgw2gamma
@@ -340,12 +342,12 @@ contains
         real(kind=hp) :: phi
         real(kind=hp), intent(in) :: phead 
         real(kind=hp), intent(in) :: ddpptb
-        if (phead>0.d0) then
+        if (phead>0._hp) then
             phi = -phead / ddpptb
-        elseif (phead>=-0.01d0) then
-            phi = 0.d0
+        elseif (phead>=-0.01_hp) then
+            phi = 0._hp
         else
-            phi = log10(-100.d0 * phead) / ddpptb
+            phi = log10(-100._hp * phead) / ddpptb
         endif
     end function phead2ndx
 
@@ -353,10 +355,10 @@ contains
         real(kind=hp) :: phead
         real(kind=hp), intent(in) :: phi
         real(kind=hp), intent(in) :: ddpptb
-        if (phi<0.d0) then
+        if (phi<0._hp) then
             phead = -phi * ddpptb
         else
-            phead = -0.01d0 * (10.d0**(phi * ddpptb))
+            phead = -0.01_hp * (10._hp**(phi * ddpptb))
         endif
     end function ndx2phead
 

@@ -2,17 +2,17 @@ module ponding
 use globals
 implicit none
 
-real(kind=hp), parameter :: soil_parameter = 0.054
+real(kind=hp), parameter :: soil_parameter = 0.054_hp
 
     type :: t_soil
         real(kind=hp) :: beta = soil_parameter
-        real(kind=hp) :: rch = 0.d0
-        real(kind=hp) :: evpt = 0.d0
-        real(kind=hp) :: evac = 0.d0
-        real(kind=hp) :: cuevpt = 0.d0
-        real(kind=hp) :: cuevpt0 = 0.d0
-        real(kind=hp) :: cuevac = 0.d0
-        real(kind=hp) :: cuevac0 = 0.d0
+        real(kind=hp) :: rch = 0._hp
+        real(kind=hp) :: evpt = 0._hp
+        real(kind=hp) :: evac = 0._hp
+        real(kind=hp) :: cuevpt = 0._hp
+        real(kind=hp) :: cuevpt0 = 0._hp
+        real(kind=hp) :: cuevac = 0._hp
+        real(kind=hp) :: cuevac0 = 0._hp
         real(kind=hp), pointer :: dt => null()
     contains
         procedure, pass :: reset          => t_soil_reset
@@ -23,12 +23,11 @@ real(kind=hp), parameter :: soil_parameter = 0.054
     type :: t_ponding
         real(kind=hp) :: zmax
         real(kind=hp) :: area
-        real(kind=hp) :: volume = 0.d0
-        real(kind=hp) :: stage = 0.d0 
-        real(kind=hp) :: soil_resistance
+        real(kind=hp) :: volume = 0._hp
+        real(kind=hp) :: stage = 0._hp 
         real(kind=hp) :: max_infiltration_rate
         real(kind=hp), pointer :: dt => null()
-        real(kind=hp) :: fponding = 1.d0
+        real(kind=hp) :: fponding = 1._hp
     contains
         procedure, pass :: getPondingEvap   => t_ponding_getPondingEvap
         procedure, pass :: getInfiltration  => t_ponding_getInfiltration
@@ -41,10 +40,10 @@ contains
     
     subroutine t_soil_reset(soil)
         class(t_soil), intent(inout) :: soil
-        soil%cuevac = 0.d0
-        soil%cuevac0 = 0.d0
-        soil%cuevpt = 0.d0
-        soil%evac = 0.d0
+        soil%cuevac = 0._hp
+        soil%cuevac0 = 0._hp
+        soil%cuevpt = 0._hp
+        soil%evac = 0._hp
     end subroutine t_soil_reset
     
 
@@ -56,15 +55,15 @@ contains
         soil%rch = recharge
         soil%evpt = pot_evap
         soil%dt = dt
-    
+
         soil%cuevac0 = soil%cuevac
         if (soil%rch < soil%evpt) then     ! drying
-            soil%cuevpt = soil%cuevpt + (soil%evpt - soil%rch) * soil%dt
+            soil%cuevpt = soil%cuevpt + max(soil%evpt - soil%rch, 0._hp) * soil%dt
             soil%cuevac = merge(soil%cuevpt, (soil%cuevpt**0.5) * soil%beta, soil%cuevpt <= soil%beta**2.)
         else                              ! wetting
             ! integrated rainfall deficit reduced by instant rainfall surplus downto zero
-            soil%cuevac = max(soil%cuevac - (soil%rch-soil%evpt) * soil%dt,0.d0)
-            soil%cuevpt = merge(soil%cuevac, (soil%cuevac**2.0) / soil%beta**2, soil%cuevac < soil%beta**2)
+            soil%cuevac = max(soil%cuevac - (soil%rch-soil%evpt) * soil%dt,0._hp)
+            soil%cuevpt = merge(soil%cuevac, (soil%cuevac**2) / soil%beta**2, soil%cuevac < soil%beta**2)
         endif
     end subroutine t_soil_update
     
@@ -113,8 +112,8 @@ contains
         real(kind=hp),    intent(in)    :: gwl
         infiltration = ponding%volume / ponding%area / ponding%dt
         if (gwl>ponding%zmax) then
-            ponding%volume = 0.d0
-            ponding%stage = 0.d0
+            ponding%volume = 0._hp
+            ponding%stage = 0._hp
         else
             infiltration = min(infiltration, ponding%max_infiltration_rate)
             call ponding%addVolume(-infiltration*ponding%area*ponding%dt)
@@ -126,12 +125,12 @@ contains
         class(t_ponding), intent(inout) :: ponding
         real(kind=hp), intent(in)       :: pet
         real(kind=hp)                   :: vol_evap
-        if (ponding%stage>0.d0) then
+        if (ponding%stage>0._hp) then
             evap = pet * ponding%fponding * ponding%dt
             call ponding%addVolume(-evap*ponding%area, vol_evap) 
             evap = -vol_evap/ponding%area ! evap holds the realised evap volume  
         else
-            evap = 0.d0
+            evap = 0._hp
         endif
     end function t_ponding_getPondingEvap
 

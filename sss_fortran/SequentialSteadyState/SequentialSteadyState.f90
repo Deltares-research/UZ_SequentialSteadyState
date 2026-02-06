@@ -13,17 +13,14 @@ implicit none
         real(kind=hp)             :: top        ! surface elevation
         real(kind=hp)             :: init_gwl   ! initial groundwater level
         real(kind=hp)             :: init_phead ! initial phead
-        real(kind=hp),    pointer :: rr(:)      ! (pointer to) rainfall forcing
-        real(kind=hp),    pointer :: ev(:)      ! (pointer to) evap forcing
-        real(kind=hp),    pointer :: gwl(:)     ! (pointer to) groundwater level arruay
         real(kind=hp)             :: zmax_ponding ! zmax depth for ponding reservoir
-        real(kind=hp)             :: soil_resist  ! soil resistance
         real(kind=hp)             :: maxinf       ! limiting infiltration rate
         integer(kind=hp)          :: niter        ! standalone test number of iterations
     end type t_sssparam
 
     type :: t_SequentialSteadyState
-        real(kind=hp)                 :: dtgw            ! groundwater timestep
+        real(kind=hp), pointer        :: dtgw => null()  ! groundwater timestep
+        real(kind=hp), pointer        :: tiop => null()  ! groundwater time (for reading only)
         real(kind=hp), pointer        :: rr => null()    ! (pointer to) rainfall forcing
         real(kind=hp), pointer        :: ev => null()    ! (pointer to) potential evaporation forcing
         real(kind=hp), pointer        :: evpond => null()! evap from ponding
@@ -43,7 +40,7 @@ implicit none
         type(t_soil)                  :: soil            ! soil instance for evaporation       
         real(kind=hp), allocatable    :: qmv0(:)         ! fluxes saved prior to the iteration loop
 
-        integer       :: spu   ! soil-physical-unit 
+        integer       :: spu   ! soil-physid0cal-unit 
         real(kind=hp) :: area  ! svat area
     contains
         procedure, pass :: do_unsa        => t_SequentialSteadyState_do_unsa
@@ -75,7 +72,7 @@ contains
      nbox  = ubound(hbotb,dim=1)
 
      ibox = 1         ! boxnr 0 not allowed here, skip it
-     z = 0.0
+     z = 0.0_hp
      do inode=1,nnode
         do while ((z<hbotb(ibox)) .and. (ibox<nbox))
            ibox = ibox + 1
@@ -105,6 +102,7 @@ contains
         endif
 
         sss%area = parameters%area
+        sss%dtgw = parameters%dtgw
         nbox = ubound(dbptr%hbotb,dim=1)
         if (present(pheadptr)) then
             sss%unsa%phead => pheadptr
@@ -120,7 +118,6 @@ contains
 
         sss%ponding%zmax                    = parameters%zmax_ponding    ! zmax depth for ponding reservoir
         sss%ponding%area                    = parameters%area            ! svat area
-        sss%ponding%soil_resistance         = parameters%soil_resist     ! soil resistance
         sss%ponding%max_infiltration_rate   = parameters%maxinf          ! limiting infiltration rate
         sss%ponding%dt                      => sss%dtgw                  ! timestep
 
@@ -129,7 +126,7 @@ contains
         sss%unsa%dt => sss%dtgw
 
         ! change of storage in unsaturated zone after unsaturated_zone.update()
-        sss%ds = 0.
+        sss%ds = 0._hp
         success = .True. 
 
         if (present(dsset)) then
@@ -148,7 +145,7 @@ contains
         sss%vsim = (sss%qrch*sss%dtgw - sss%ds) * sss%area
         gam = sss%unsa%gwl2gamma(sss%gwl)
         if (sss%gwl > sss%unsa%top) then
-           sss%sc1 = 1.d0
+           sss%sc1 = 1._hp
         else
            sss%sc1 = sss%unsa%get_sc1(gam)
         endif
@@ -202,9 +199,9 @@ contains
         sss%qrch = sss%ponding%getInfiltration(sss%gwl)
         call sss%soil%update(sss%qrch, sss%ev, sss%dtgw)
         sss%evsoil = sss%soil%getActualEvap()
-        if ((sss%ponding%volume > 0.0) .or. (sss%gwl > sss%unsa%top)) then
+        if ((sss%ponding%volume > 0._hp) .or. (sss%gwl > sss%unsa%top)) then
             call sss%soil%reset()
-            sss%evsoil=0.d0
+            sss%evsoil=0._hp
         endif
         sss%qrot = qrot / m2cm
         sss%qrch = sss%qrch - sss%qrot - sss%evsoil       ! reduce the infiltration by the imposed crop consumption and soil evaporation
@@ -224,14 +221,15 @@ contains
         sc1 = sss%sc1
     end subroutine t_SequentialSteadyState_calc
 
-    subroutine t_SequentialSteadyState_finalize(sss,gwl,pond,qrun,qmodf,theta_box,phead_box,reva,submerged)
+    subroutine t_SequentialSteadyState_finalize(sss,gwl,pond,qrun,qmodf,sv_box,phead_box,reva,submerged)
         class(t_SequentialSteadyState), intent(inout) :: sss
         real(kind=hp),    intent(IN)  :: gwl           ! incoming gwl [cm]
         real(kind=hp),    intent(OUT) :: pond          ! ponding depth [cm]
         real(kind=hp),    intent(OUT) :: qrun          ! runoff [cm/d]
         real(kind=hp),    intent(OUT) :: qmodf         ! qmodf [cm/d]
-        real(kind=hp),    intent(OUT) :: theta_box(:)  ! moisture content by box[-]
-        real(kind=hp),    intent(OUT) :: phead_box(:)  ! the real pressure head by box[-]
+!       real(kind=hp),    intent(OUT) :: theta_box(:)  ! moisture content by box[-]
+        real(kind=hp),    intent(OUT) :: sv_box(:)     ! storage by box[-]
+        real(kind=hp),    intent(OUT) :: phead_box(:)  ! tahe real pressure head by box[-]
         real(kind=hp),    intent(OUT) :: reva(2)       ! actual soil evaporation [cm] and ponding evaporation
         logical,          intent(OUT), optional :: submerged(:)  ! True/False mask of submerged boxes (True=box is submerged)
         real(kind=hp) :: th1, th2
@@ -243,12 +241,12 @@ contains
         pond = sss%ponding%stage * m2cm
         sss%evpond = sss%ponding%getPondingEvap(sss%ev)
         qrun = sss%qrun * m2cm
-        reva(1) = sss%soil%evac * m2cm          ! actual soil evap
+        reva(1) = sss%soil%evac * m2cm          ! actual soil evaap
         reva(2) = sss%evpond * m2cm             ! actual ponding evap
         qmodf = sss%qmodf * m2cm
         call sss%save_fluxes()
         sss%gwl0 = sss%gwl
-        call sss%unsa%get_theta(theta_box)
+        call sss%unsa%get_storage(sv_box)
         call sss%unsa%get_phead(phead_box)
     end subroutine t_SequentialSteadyState_finalize
 
