@@ -1,4 +1,0 @@
-﻿  nf_lib.c
-D:\leander\MetaSWAP\sss\git\UZ_SequentialSteadyState\sss_fortran\netcdf\netcdf-fortran-4.4.4\fortran\nf_lib.c(187,1): warning C4715: 'nc_inq_numtypes': not all control paths return a value
-D:\leander\MetaSWAP\sss\git\UZ_SequentialSteadyState\sss_fortran\netcdf\netcdf-fortran-4.4.4\fortran\nf_lib.c(177,1): warning C4715: 'nc_inq_numgrps': not all control paths return a value
-  netcdf4.vcxproj -> D:\leander\MetaSWAP\sss\git\UZ_SequentialSteadyState\sss_fortran\netcdf\x64\Release\netcdf4.lib
