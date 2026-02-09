@@ -29,7 +29,7 @@
 		</Configuration>
 		<Configuration Name="Debug|x64" UseCompiler="ifortCompiler" OutputDirectory="D:\leander\imod_collector\seqsteadystate" TargetName="SeqSteadyState" ConfigurationType="typeDynamicLibrary">
 			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\bmi" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(OSS_UCRTLIBDIR);..\..\tools\netcdf\netCDF 4.6.1\lib\" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="netcdf.lib"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(OSS_UCRTLIBDIR);..\netcdf\netCDF 4.6.1\lib\" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="netcdf.lib"/>
 			<Tool Name="VFResourceCompilerTool"/>
 			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 			<Tool Name="VFCustomBuildTool"/>
@@ -40,7 +40,7 @@
 		</Configuration>
 		<Configuration Name="Release|x64" UseCompiler="ifortCompiler" OutputDirectory="D:\leander\imod_collector\seqsteadystate" TargetName="SeqSteadyState" ConfigurationType="typeDynamicLibrary">
 			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeDisabled" HeapArrays="0" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\bmi" PreprocessorDefinitions="IFORT;  INCLUDE_METASWAP; INCLUDE_MOZART"/>
-			<Tool Name="VFLinkerTool" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(OSS_UCRTLIBDIR);..\..\modmsw\ttutil\netcdf\netCDF 4.6.1\lib\" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="..\..\ossdeltares\MPICH64LIB\fmpich2.lib netcdf.lib"/>
+			<Tool Name="VFLinkerTool" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(OSS_UCRTLIBDIR);..\netcdf\netCDF 4.6.1\lib\" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="netcdf.lib"/>
 			<Tool Name="VFResourceCompilerTool"/>
 			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 			<Tool Name="VFCustomBuildTool"/>
@@ -54,24 +54,16 @@
 		<Filter Name="Header Files" Filter="fi;fd"/>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-			<File RelativePath="..\bmi\bmi.f90">
-			</File>
-			<File RelativePath="..\SequentialSteadyState\database_io.f90">
-			</File>
+			<File RelativePath="..\bmi\bmi.f90"/>
+			<File RelativePath="..\SequentialSteadyState\database_io.f90"/>
 			<File RelativePath="..\SequentialSteadyState\database_utils.f90"/>
-			<File RelativePath="..\SequentialSteadyState\downscaling.f90">
-			</File>
-			<File RelativePath="..\SequentialSteadyState\globals.f90">
-			</File>
+			<File RelativePath="..\SequentialSteadyState\downscaling.f90"/>
+			<File RelativePath="..\SequentialSteadyState\globals.f90"/>
 			<File RelativePath="..\SequentialSteadyState\ponding.f90"/>
-			<File RelativePath="..\SequentialSteadyState\SequentialSteadyState.f90">
-			</File>
-			<File RelativePath=".\SequentialSteadyState_bmi.f90">
-			</File>
-			<File RelativePath="..\SequentialSteadyState\sss_comp.f90">
-			</File>
-			<File RelativePath="..\SequentialSteadyState\UnsaturatedZone.f90">
-			</File>
+			<File RelativePath="..\SequentialSteadyState\SequentialSteadyState.f90"/>
+			<File RelativePath=".\SequentialSteadyState_bmi.f90"/>
+			<File RelativePath="..\SequentialSteadyState\sss_comp.f90"/>
+			<File RelativePath="..\SequentialSteadyState\UnsaturatedZone.f90"/>
 		</Filter>
 		<File RelativePath=".\ReadMe.txt"/>
 	</Files>
