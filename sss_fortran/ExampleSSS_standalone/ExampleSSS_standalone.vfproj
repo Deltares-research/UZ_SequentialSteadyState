@@ -40,7 +40,7 @@
 		</Configuration>
 		<Configuration Name="Release|x64" UseCompiler="ifxCompiler">
 			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" FloatingPointExceptionHandling="fpe0" RuntimeLibrary="rtMultiThreadedDLL"/>
-			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\netcdf\netCDF 4.6.1\lib\" SubSystem="subSystemConsole"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\netcdf\netCDF 4.6.1\lib\" SubSystem="subSystemConsole" AdditionalDependencies="netcdf.lib"/>
 			<Tool Name="VFResourceCompilerTool"/>
 			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 			<Tool Name="VFCustomBuildTool"/>

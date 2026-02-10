@@ -1,0 +1,7 @@
+.vs/
+ExampleSSS_standalone/x64/
+SeqSteadStateDLL/x64/
+SeqSteadStateDLL_stub/
+netcdf/x64/
+*.u2d
+

@@ -198,13 +198,16 @@ contains
         call sss%ponding%addPrecip(sss%rr)
         sss%qrch = sss%ponding%getInfiltration(sss%gwl)
         call sss%soil%update(sss%qrch, sss%ev, sss%dtgw)
-        sss%evsoil = sss%soil%getActualEvap()
         if ((sss%ponding%volume > 0._hp) .or. (sss%gwl > sss%unsa%top)) then
+            sss%evpond = sss%ponding%getPondingEvap(sss%ev)
             call sss%soil%reset()
-            sss%evsoil=0._hp
+            sss%evsoil = 0._hp
+        else
+            sss%evsoil = sss%soil%getActualEvap()
+            sss%evpond = 0._hp
         endif
         sss%qrot = qrot / m2cm
-        sss%qrch = sss%qrch - sss%qrot - sss%evsoil       ! reduce the infiltration by the imposed crop consumption and soil evaporation
+        sss%qrch = sss%qrch - sss%qrot - sss%evsoil
         call sss%do_unsa()
     end subroutine t_SequentialSteadyState_prepare
 
@@ -227,7 +230,6 @@ contains
         real(kind=hp),    intent(OUT) :: pond          ! ponding depth [cm]
         real(kind=hp),    intent(OUT) :: qrun          ! runoff [cm/d]
         real(kind=hp),    intent(OUT) :: qmodf         ! qmodf [cm/d]
-!       real(kind=hp),    intent(OUT) :: theta_box(:)  ! moisture content by box[-]
         real(kind=hp),    intent(OUT) :: sv_box(:)     ! storage by box[-]
         real(kind=hp),    intent(OUT) :: phead_box(:)  ! tahe real pressure head by box[-]
         real(kind=hp),    intent(OUT) :: reva(2)       ! actual soil evaporation [cm] and ponding evaporation
@@ -239,7 +241,6 @@ contains
         call sss%unsa%finalize_timestep(sss%gwl,sss%qmodf)
         sss%qrun = sss%ponding%getRunoff()
         pond = sss%ponding%stage * m2cm
-        sss%evpond = sss%ponding%getPondingEvap(sss%ev)
         qrun = sss%qrun * m2cm
         reva(1) = sss%soil%evac * m2cm          ! actual soil evaap
         reva(2) = sss%evpond * m2cm             ! actual ponding evap
@@ -269,3 +270,4 @@ contains
     end subroutine t_SequentialSteadyState_downscale
 
 end module sss
+!       sss%evpond = sss%ponding%getPondingEvap(sss%ev)    ! moet hier weg 

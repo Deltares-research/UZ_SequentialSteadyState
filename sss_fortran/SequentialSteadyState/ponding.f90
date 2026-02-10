@@ -101,9 +101,8 @@ contains
         real(kind=hp)                   :: runoff
         class(t_ponding), intent(inout) :: ponding
         real(kind=hp)                   :: excess_volume
-        excess_volume = max(0.d0, ponding%stage-ponding%zmax)*ponding%area
-        call ponding%addVolume(-excess_volume)
-
+        runoff = max(0.d0, ponding%stage-ponding%zmax)
+        call ponding%addVolume(-runoff * ponding%area)
     end function t_ponding_getRunoff
 
     function t_ponding_getInfiltration(ponding, gwl) result (infiltration)
