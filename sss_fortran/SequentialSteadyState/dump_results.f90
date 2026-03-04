@@ -36,24 +36,26 @@ contains
 
 subroutine t_results_init(self, nbox, nnod)
    class(t_results), target, intent(inout) :: self
-   integer, intent(in) :: nbox  ! number of boxes
-   integer, intent(in) :: nnod  ! number of nodes
+   integer, intent(in)           :: nbox  ! number of boxes
+   integer, intent(in), optional :: nnod  ! number of nodes
    self%nbox = nbox
-   self%nnod = nnod
    if (allocated(self%h)) deallocate(self%h)
    allocate(self%h(nbox))
-   if (allocated(self%th)) deallocate(self%th)
-   allocate(self%th(nnod))
    if (allocated(self%thbox)) deallocate(self%thbox)
    allocate(self%thbox(nbox))
    if (allocated(self%phi)) deallocate(self%phi)
    allocate(self%phi(nbox))
    if (allocated(self%submerged)) deallocate(self%submerged)
    allocate(self%submerged(nbox))
-   if (allocated(self%phnode)) deallocate(self%phnode)
-   allocate(self%phnode(nnod))
-   if (allocated(self%thnode)) deallocate(self%thnode)
-   allocate(self%thnode(nnod))
+   if (present(nnod)) then
+       self%nnod = nnod
+       if (allocated(self%th)) deallocate(self%th)
+       allocate(self%th(nnod))
+       if (allocated(self%phnode)) deallocate(self%phnode)
+       allocate(self%phnode(nnod))
+       if (allocated(self%thnode)) deallocate(self%thnode)
+       allocate(self%thnode(nnod))
+   endif
 end subroutine t_results_init
 
 subroutine t_dumpnc_init(self, fnout, nbox, nnod, nod2box, znode, param, unsa_db_str)
