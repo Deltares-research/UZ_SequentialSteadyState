@@ -143,11 +143,10 @@ contains
         real(kind=hp) :: gam
         sss%ds = sss%unsa%update(sss%qrch, sss%gwl)
         sss%vsim = (sss%qrch*sss%dtgw - sss%ds) * sss%area
-        gam = sss%unsa%gwl2gamma(sss%gwl)
         if (sss%gwl > sss%unsa%top) then
            sss%sc1 = 1._hp
         else
-           sss%sc1 = sss%unsa%get_sc1(gam)
+           sss%sc1 = sss%unsa%get_sc1()
         endif
         call sss%restore_fluxes()
     end subroutine t_SequentialSteadyState_do_unsa

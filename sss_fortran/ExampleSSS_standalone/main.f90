@@ -29,7 +29,7 @@ real(kind=hp), target :: dtgw
 logical :: suc6
 integer :: itime, iter
 integer, parameter :: ntime = 200
-integer, parameter :: niter = 200
+integer, parameter :: niter = 20
 integer, parameter :: nbox = 18
 real(kind=hp) :: qrain(ntime), qevap(ntime)
 
@@ -56,9 +56,9 @@ suc6 = dbset%readNCset(dbpath)
 ! Fill convenient struct with parameters for this sequential steady state instance
 param%area         = 100._hp     ! area
 param%top          =   0._hp     ! elevation
-param%spu          = 300._hp     ! soil physical unit number
+param%spu          = 300         ! soil physical unit number
 param%init_phead   =  -1.5136_hp ! initial phead
-param%init_gwl     =  -3._hp     ! initial gwl
+param%init_gwl     =-300._hp     ! initial gwl [cm]
 param%dprz         =   1._hp     ! rootzone depth, thickness
 param%zmax_ponding =   0.02_hp   ! ponding reservoir depth
 param%maxinf       =   0.0032_hp ! infiltration rate limit
@@ -69,7 +69,7 @@ allocate(h(nbox))                     ! vertical profile of pressure heads
 allocate(theta(nbox))                 ! vertical profile of moisture content
 
 ! open some files for output
-!call results%init(nbox)
+call results%init(nbox)
 !call dump%init('results.nc') 
 
 ! set timestept
@@ -77,10 +77,14 @@ dtgw = 1._hp                          ! timestep size
 do itime = 1, ntime                   ! time-loop
    call svat(1)%prepare(dtgw,qrain(itime),qevap(itime),qrot)
 
-   call svat(1)%calc(results%gwl, &
+   svat(1)%gwl = param%init_gwl/m2cm  ! experiment: start each timestep with the initial level
+                                      ! then multiply each timestep
+   do iter = 1, niter                 ! iteration loop
+      call svat(1)%calc(svat(1)%gwl * 0.8, &
                   results%h,      &
                   results%qbot,   &
                   results%sc1)   ! set initial groundwater level as the current level, no modflow interaction
+   enddo
 
    call svat(1)%finalize(results%gwl,   &
                       results%pond,  &

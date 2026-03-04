@@ -105,6 +105,7 @@ contains
         real(kind=hp) :: sigma, qin, gam_local
         integer :: ibox, lgam, lphi
 
+        uz%gam = uz%gwl2gamma(gwl)
         uz%maxbox = uz%nonsubmerged(gwl) 
         lgam = lbound(uz%unsa_db%svtb, dim=2)  
         lphi = lbound(uz%unsa_db%svtb, dim=3)
@@ -159,10 +160,10 @@ contains
         enddo
     end function t_unsa_gamma2storage
 
-    function t_unsa_get_sc1(uz, gamma) result (sc1)
+    function t_unsa_get_sc1(uz) result (sc1)
         real(kind=hp)  :: sc1 
         class(t_unsa), intent(inout) :: uz
-        real(kind=hp) ::sv0, sv1, gwl0, gwl1, gamma, dgamma
+        real(kind=hp) ::sv0, sv1, gwl0, gwl1, dgamma
         real(kind=hp), parameter :: sc1_min = 1.e-04_hp
         real(kind=hp) :: gamma0, gamma1,lgam, ugam
         logical, parameter :: newinterp = .True.
@@ -171,14 +172,14 @@ contains
         if (newinterp) then
            lgam = real(lbound(uz%unsa_db%dpgwtb,dim=1))
            ugam = real(ubound(uz%unsa_db%dpgwtb,dim=1))
-           gamma0 = max(gamma-dgamma,real(lgam))
-           gamma1 = min(gamma+dgamma,real(ugam)-eps)
+           gamma0 = max(uz%gam-dgamma,real(lgam))
+           gamma1 = min(uz%gam+dgamma,real(ugam)-eps)
            sv0 = uz%gamma2storage(gamma0)
            sv1 = uz%gamma2storage(gamma1)   ! central difference
            gwl0 = uz%gamma2gwl(gamma0)
            gwl1 = uz%gamma2gwl(gamma1)
         else
-           gamma0 = floor(gamma)
+           gamma0 = floor(uz%gam)
            gamma1 = gamma0 + 1._hp
            sv0 = uz%gamma2storage(gamma0)
            sv1 = uz%gamma2storage(gamma1)
