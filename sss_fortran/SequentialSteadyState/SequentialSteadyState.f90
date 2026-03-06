@@ -216,7 +216,7 @@ contains
         real(kind=hp), intent(OUT) :: h(:)    ! pressure head [cm]
         real(kind=hp), intent(OUT) :: qsim    ! recharge flux to groundwater [cm/d]
         real(kind=hp), intent(OUT) :: sc1     ! storage coefficient [cm/d]
-        sss%gwl = gwl
+        sss%gwl = gwl / m2cm
         call sss%do_unsa()
         h(:) = sss%unsa%phead(:) * m2cm
         qsim = sss%vsim/sss%area * m2cm

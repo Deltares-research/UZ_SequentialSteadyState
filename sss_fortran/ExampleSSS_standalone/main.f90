@@ -1,4 +1,5 @@
 !  ExampleSSS.f90 
+!test
 !
 !  FUNCTIONS:
 !  ExampleSSS - Instructive application of sequential steady state class
@@ -80,7 +81,8 @@ do itime = 1, ntime                   ! time-loop
    svat(1)%gwl = param%init_gwl/m2cm  ! experiment: start each timestep with the initial level
                                       ! then multiply each timestep
    do iter = 1, niter                 ! iteration loop
-      call svat(1)%calc(svat(1)%gwl * 0.8, &
+      call svat(1)%calc(             &
+                  svat(1)%gwl * 0.8, &
                   results%h,      &
                   results%qbot,   &
                   results%sc1)   ! set initial groundwater level as the current level, no modflow interaction

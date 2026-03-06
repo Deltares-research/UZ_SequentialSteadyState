@@ -113,11 +113,13 @@ contains
         real(kind=hp), intent(in)  :: xtb(s1:)
         real(kind=hp), intent(in)  :: x1
         real(kind=hp), intent(in), optional  :: default 
-        integer       :: ix, i1, i2
+        integer       :: ix, i1, i2, ilower, iupper
         real(kind=hp) :: fix, sgn
 
-        i1 = lbound(xtb,dim=1) ! lower bound of index
-        i2 = ubound(xtb,dim=1) ! upper bound of index
+        ilower = lbound(xtb,dim=1) ! lower bound of index
+        iupper = ubound(xtb,dim=1) ! upper bound of index
+        i1 = ilower
+        i2 = iupper
         if (abs(xtb(i2)-xtb(i1))<eps) then
             if (present(default)) then
                 c1 = default
@@ -149,7 +151,7 @@ contains
               fix=(x1-xtb(ix))/(xtb(ix+1)-xtb(ix))   ! use the obtained index, derive the fraction
            endif
         endif
-        c1 = ix + fix                          ! for convenience combine index and fraction in a single float8, (still sufficiently accurate)
+        c1 = min(ix + fix, real(iupper,kind=hp)-eps)      ! for convenience combine index and fraction in a single float8, (still sufficiently accurate)
     end function ix_fix_global
 
 

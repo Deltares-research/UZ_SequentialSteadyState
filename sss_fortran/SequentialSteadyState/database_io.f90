@@ -312,9 +312,10 @@ contains
         real(hp),          intent(in) :: dpgw   ! groundwater depth relative to surface
         integer  :: igk, index
         real(hp) :: figk
+        real(hp) :: gamma1, gamma2
         logical, parameter :: alternative = .True.
         if (alternative) then
-           gamma = ix_fix(db%dpgwtb,dpgw,-2,gamma)   !! experimental
+           gamma = ix_fix(db%dpgwtb,dpgw,-2,gamma)
         else
            index = min(ubound(db%igdc, dim=1) - 1,         &
                        max(lbound(db%igdc, dim=1),         &
