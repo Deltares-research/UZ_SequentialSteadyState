@@ -125,7 +125,7 @@ contains
               filname=trim(dbset%unsa_path)//'/unsa_'//dum//'.nc'
               ierr = nf90_open(trim(filname), NF90_NOWRITE, ncid)
               if (ierr.eq.NF90_NOERR) then
-                 write(0,*) 'reading '//filname//' ...' 
+                 !write(0,*) 'reading '//filname//' ...' 
                  ! create database instance
                  allocate(db)
                  if (.not.db%readNC(ncid)) then

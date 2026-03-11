@@ -73,7 +73,7 @@ contains
         if (.not.realloc(uz%phi,1,uz%nbox)) return
         if (.not.realloc(uz%storage,1,uz%nbox)) return
         if (.not.realloc(uz%submerged,1,uz%nbox)) return
-        uz%storage = 0.
+        uz%storage = 0._hp
         uz%phead = phead
         uz%submerged = .False.
 
@@ -120,7 +120,7 @@ contains
             endif
             sigma = uz%sv0(ibox) - qin * uz%dt
             call uz%unsa_db%sigma2phi(sigma, uz%phi(ibox), uz%gam, uz%dt, ibox, default=uz%phi(ibox))
-            if (uz%phi(ibox)<0) then
+            if (uz%phi(ibox)<0._hp) then
                 uz%phead(ibox) = linear(uz%unsa_db%ptb,uz%phi(ibox),lphi)
             else
                 uz%phead(ibox) = -(10**(uz%phi(ibox)*uz%unsa_db%ddpptb))/m2cm
@@ -149,7 +149,7 @@ contains
         real(kind=hp), intent(in)    :: gam 
         real(kind=hp)  :: sv, gwl  
         integer :: ibox, lgam, lphi
-        stotal = 0.d0
+        stotal = 0._hp
         gwl = uz%gamma2gwl(gam)
         uz%maxbox = uz%nonsubmerged(gwl) ! gwl calculated from gam
         lgam = lbound(uz%unsa_db%svtb, dim=2)  
@@ -189,7 +189,7 @@ contains
 
         if (abs(gwl1-gwl0)>eps) then
             sc1 = (sv1 - sv0)/(gwl1 - gwl0)
-            sc1 = max(min(sc1, 1.d0),sc1_min)
+            sc1 = max(min(sc1, 1._hp),sc1_min)
         else
             sc1 = sc1_min
         endif
@@ -231,7 +231,7 @@ contains
         uz%submerged(lastbox+1:) = .True.   ! These boxes are submerged
         do ibox=1, lastbox
             call uz%unsa_db%sv2phi(uz%sv(ibox), uz%phi(ibox), uz%gam, ibox, default=uz%phi(ibox))
-            if (uz%phi(ibox)<0) then
+            if (uz%phi(ibox)<0_hp) then
                 uz%phead(ibox) = linear(uz%unsa_db%ptb,uz%phi(ibox),lphi)
             else
                 uz%phead(ibox) = -(10**(uz%phi(ibox)*uz%unsa_db%ddpptb))/m2cm
@@ -284,7 +284,7 @@ contains
         lgam = lbound(uz%unsa_db%pheadtb,dim=2)
         lphi = lbound(uz%unsa_db%pheadtb,dim=3)
         do ibox=1,min(size(phead_box),uz%nbox)
-           phead_box(ibox) = bilinear(uz%unsa_db%pheadtb(ibox,:,:),uz%gam,uz%phi(ibox),lgam,lphi)
+           phead_box(ibox) = bilinear(uz%unsa_db%pheadtb(ibox,:,:),uz%gam,uz%phi(ibox),lgam,lphi) * m2cm
         enddo
     end subroutine t_unsa_get_pressure_head
 end module unsaturated_zone

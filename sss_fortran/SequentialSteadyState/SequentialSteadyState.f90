@@ -215,7 +215,7 @@ contains
         real(kind=hp), intent(IN)  :: gwl     ! groundwater level [cm]
         real(kind=hp), intent(OUT) :: h(:)    ! pressure head [cm]
         real(kind=hp), intent(OUT) :: qsim    ! recharge flux to groundwater [cm/d]
-        real(kind=hp), intent(OUT) :: sc1     ! storage coefficient [cm/d]
+        real(kind=hp), intent(OUT) :: sc1     ! storage coefficient [cm/cm]
         sss%gwl = gwl / m2cm
         call sss%do_unsa()
         h(:) = sss%unsa%phead(:) * m2cm
@@ -229,8 +229,8 @@ contains
         real(kind=hp),    intent(OUT) :: pond          ! ponding depth [cm]
         real(kind=hp),    intent(OUT) :: qrun          ! runoff [cm/d]
         real(kind=hp),    intent(OUT) :: qmodf         ! qmodf [cm/d]
-        real(kind=hp),    intent(OUT) :: sv_box(:)     ! storage by box[-]
-        real(kind=hp),    intent(OUT) :: phead_box(:)  ! tahe real pressure head by box[-]
+        real(kind=hp),    intent(OUT) :: sv_box(:)     ! storage by box [-]
+        real(kind=hp),    intent(OUT) :: phead_box(:)  ! the real pressure head by box [cm]
         real(kind=hp),    intent(OUT) :: reva(2)       ! actual soil evaporation [cm] and ponding evaporation
         logical,          intent(OUT), optional :: submerged(:)  ! True/False mask of submerged boxes (True=box is submerged)
         real(kind=hp) :: th1, th2
@@ -241,7 +241,7 @@ contains
         sss%qrun = sss%ponding%getRunoff()
         pond = sss%ponding%stage * m2cm
         qrun = sss%qrun * m2cm
-        reva(1) = sss%soil%evac * m2cm          ! actual soil evaap
+        reva(1) = sss%soil%evac * m2cm          ! actual soil evap
         reva(2) = sss%evpond * m2cm             ! actual ponding evap
         qmodf = sss%qmodf * m2cm
         call sss%save_fluxes()
@@ -252,8 +252,8 @@ contains
 
     subroutine t_SequentialSteadyState_downscale(sss, thnode, phnode)
         class(t_SequentialSteadyState), intent(inout) :: sss
-        real(kind=hp),    intent(OUT) :: thnode(:)  ! moisture content by node[-]
-        real(kind=hp),    intent(OUT) :: phnode(:)  ! moisture content by node[-]
+        real(kind=hp),    intent(OUT) :: thnode(:)  ! moisture content by node [-]
+        real(kind=hp),    intent(OUT) :: phnode(:)  ! pressure head by node [m]
         real(kind=hp) :: phi, gam
         integer       :: bn, lgam, lphi, inode
         lgam = lbound(sss%unsa%unsa_db%svtb, dim=2) ! assumed to be the same dimensions in the node tables 
