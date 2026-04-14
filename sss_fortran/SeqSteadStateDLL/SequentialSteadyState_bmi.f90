@@ -7,6 +7,7 @@ module sssbmi
    use bmif, only: BMI_SUCCESS, BMI_FAILURE
    use iso_c_binding, only: c_int, c_char, c_double, C_NULL_CHAR, c_loc, c_ptr
    use dumpres
+   use globals
    use sss_comp
 
    implicit none
@@ -32,8 +33,6 @@ module sssbmi
    integer(c_int), bind(C, name="BMI_LENVERSION") :: BMI_LENVERSION = 256
    !DIR$ ATTRIBUTES DLLEXPORT :: BMI_LENVERSION
 
-   type (t_dumpnc_multi) :: dump
-
 contains  
   
   ! returns sversion from simvar module 
@@ -52,6 +51,11 @@ contains
       soilselect = 1        ! temporary: set all soil types active
       select_spu = (soilselect>0)
       call sss_initComponent()
+      ! open output (todo: make optional through bmi)
+      if (len_trim(dumpfile)>0) then
+          jadump = .True.
+          call dump%init(trim(dumpfile))
+      endif
       call sss_initSimulation()
       bmi_status = BMI_SUCCESS
    end function bmi_initialize
@@ -97,12 +101,18 @@ contains
    !DEC$ ATTRIBUTES DLLEXPORT :: bmi_update
       integer(kind=c_int)      :: bmi_status
       bmi_status = BMI_FAILURE
+      if (jadump) then
+          call dump%dump()
+      endif
    end function bmi_update
 
    function bmi_finalize() result(bmi_status) bind(C, name="finalize")
    !DEC$ ATTRIBUTES DLLEXPORT :: bmi_finalize
       integer(kind=c_int)      :: bmi_status
       bmi_status = BMI_SUCCESS
+      if (jadump) then
+         call dump%close()
+      endif
    end function bmi_finalize
 
    function bmi_saveState() result(bmi_status) bind(C, name="saveState")

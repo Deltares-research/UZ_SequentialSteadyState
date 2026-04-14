@@ -8,6 +8,9 @@ implicit none
         logical                  :: ja_top = .False.      ! .TRUE. keep track of ponding and poinding infilt/evap as part of the top process
                                                           ! .FALSE. The recharge flux qrch equal incoming precip, actual evap equals incomping PET
 
+        character(len=*), parameter :: dumpfile = 'd:\leander\temp\sss_dump.nc'                                            
+        logical :: jadump
+
     interface realloc
         module procedure realloc1d_real
         module procedure realloc2d_real

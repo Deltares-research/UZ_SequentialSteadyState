@@ -49,6 +49,8 @@ contains
    procedure, pass :: close       => t_dumpnc_multi_close
 end type t_dumpnc_multi
 
+type(t_dumpnc_multi)   :: dump                ! instance of netcdf dump file for multiple svats
+
 contains
 
 subroutine t_results_init(self, nbox, nnod)

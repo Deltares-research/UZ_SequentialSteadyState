@@ -39,6 +39,7 @@ implicit none
    integer, parameter          :: spu_max = 370       ! max spu number
    character(len=*), parameter :: dbpath = 'unsa_db'  ! for now hardwired, relative to the cwd 
 
+
     type t_meteo
         real(kind=hp) :: time
         real(kind=hp) :: rr
@@ -209,6 +210,8 @@ contains
           meteo_old => meteo_1
           meteo_new => meteo_2
       endif
+    
+
       end subroutine sss_initSimulation
 
       subroutine parse_area_svat(line, parameters, svat_nr)
