@@ -2,6 +2,7 @@ module dumpres
 use globals
 use netcdf
 use sss
+use sss_comp
 implicit none
 
 type :: t_results
@@ -15,6 +16,7 @@ contains
    procedure, pass :: init    => t_results_init
 end type t_results
 
+! Single svat, but in detail (boxes, nodes ... of the vertical profile in the svat)
 type :: t_dumpnc
    integer :: ncid
    integer :: ierr = 0
@@ -31,6 +33,21 @@ contains
    procedure, pass :: dump        => t_dumpnc_dump
    procedure, pass :: close       => t_dumpnc_close
 end type t_dumpnc
+
+! Multiple svat, but casual, only a single value per svat (qsim, sc1, gwl, ..., spatial pattern in time)
+type :: t_dumpnc_multi
+   integer :: ncid
+   integer :: ierr = 0
+   integer :: count = 0
+   integer :: varid_time, varid_x, varid_y
+   integer :: varid_rr, varid_ev, varid_evsoil, varid_evpond, varid_qrun, varid_qrot 
+   integer :: varid_gwl, varid_vsim, varid_sc1, varid_qmodf, varid_pond, varid_nbox
+   integer :: dimid_time, dimid_svat
+contains
+   procedure, pass :: init        => t_dumpnc_multi_init
+   procedure, pass :: dump        => t_dumpnc_multi_dump
+   procedure, pass :: close       => t_dumpnc_multi_close
+end type t_dumpnc_multi
 
 contains
 
@@ -154,5 +171,60 @@ subroutine t_dumpnc_close(self)
    self%ierr = nf90_close(self%ncid)
    self%ncid = 0
 end subroutine t_dumpnc_close
+
+subroutine t_dumpnc_multi_init(self, fnout)
+   class(t_dumpnc_multi), target, intent(inout) :: self
+   character(len=*), intent(in) :: fnout
+   integer :: ns
+   self%ierr = nf90_create(fnout, NF90_WRITE, self%ncid)
+   self%ierr = nf90_def_dim(self%ncid, 'svat', svat_nr_max, self%dimid_svat)     ! svat dimension
+   self%ierr = nf90_def_dim(self%ncid, 'time', NF90_UNLIMITED, self%dimid_time) ! time dimension
+
+   ! Define variables
+   self%ierr = nf90_def_var(self%ncid, 'time', NF90_REAL8,(/self%dimid_time/), self%varid_time)
+   self%ierr = nf90_def_var(self%ncid, 'x',    NF90_REAL8,(/self%dimid_svat/), self%varid_x)
+   self%ierr = nf90_def_var(self%ncid, 'y',    NF90_REAL8,(/self%dimid_svat/), self%varid_y)
+
+   self%ierr = nf90_def_var(self%ncid, 'rr',    NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_rr)
+   self%ierr = nf90_def_var(self%ncid, 'ev',    NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_ev)
+   self%ierr = nf90_def_var(self%ncid, 'evsoil',NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_evsoil)
+   self%ierr = nf90_def_var(self%ncid, 'evpond',NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_evpond)
+   self%ierr = nf90_def_var(self%ncid, 'qrun',  NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_qrun)
+   self%ierr = nf90_def_var(self%ncid, 'qrot',  NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_qrot)
+   self%ierr = nf90_def_var(self%ncid, 'gwl',   NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_gwl)
+   self%ierr = nf90_def_var(self%ncid, 'vsim',  NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_vsim)
+   self%ierr = nf90_def_var(self%ncid, 'sc1',   NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_sc1)
+   self%ierr = nf90_def_var(self%ncid, 'qmodf', NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_qmodf)
+   self%ierr = nf90_def_var(self%ncid, 'pond',  NF90_REAL8,(/self%dimid_svat, self%dimid_time/), self%varid_pond)
+   self%ierr = nf90_def_var(self%ncid, 'nbox',  NF90_INT,  (/self%dimid_svat, self%dimid_time/), self%varid_nbox)
+
+   self%ierr = nf90_enddef(self%ncid)
+end subroutine t_dumpnc_multi_init
+
+subroutine t_dumpnc_multi_dump(self)
+   class(t_dumpnc_multi), target, intent(inout) :: self
+   self%count = self%count + 1
+   self%ierr = nf90_put_var(self%ncid, self%varid_rr,    rr_array,     start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_ev,    ev_array,     start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_evsoil,evsoil_array, start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_evpond,evpond_array, start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_qrun,  qrun_array,   start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_qrot,  qrot_array,   start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_gwl,   gwl_array,    start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_vsim,  vsim_array,   start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_sc1,   sc1_array,    start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_qmodf, qmodf_array,  start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_pond,  pond_array,   start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_nbox,  nbox_array,   start=(/1,self%count/), count=(/svat_nr_max,1/)) 
+   self%ierr = nf90_put_var(self%ncid, self%varid_time, tiop(1), start=(/self%count/)) 
+end subroutine t_dumpnc_multi_dump
+
+subroutine t_dumpnc_multi_close(self)
+   class(t_dumpnc_multi), target, intent(inout) :: self
+   self%ierr = nf90_close(self%ncid)
+   self%ncid = 0
+end subroutine t_dumpnc_multi_close
+
+
 
 end module dumpres

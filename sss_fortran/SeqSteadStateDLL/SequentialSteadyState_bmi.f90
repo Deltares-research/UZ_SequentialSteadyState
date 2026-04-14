@@ -6,6 +6,7 @@
 module sssbmi
    use bmif, only: BMI_SUCCESS, BMI_FAILURE
    use iso_c_binding, only: c_int, c_char, c_double, C_NULL_CHAR, c_loc, c_ptr
+   use dumpres
    use sss_comp
 
    implicit none
@@ -31,6 +32,7 @@ module sssbmi
    integer(c_int), bind(C, name="BMI_LENVERSION") :: BMI_LENVERSION = 256
    !DIR$ ATTRIBUTES DLLEXPORT :: BMI_LENVERSION
 
+   type (t_dumpnc_multi) :: dump
 
 contains  
   
@@ -340,7 +342,31 @@ contains
       end select
       bmi_status = BMI_SUCCESS
    end function get_var_shape
- 
+
+   function dump_init(c_dump_name) result(bmi_status) bind(C, name="dump_init")
+   !DEC$ ATTRIBUTES DLLEXPORT :: dump_init
+      integer(kind=c_int)                  :: bmi_status
+      character (kind=c_char), intent(in)  :: c_dump_name(*)
+      character(len=MAXSTRLEN) :: dump_name
+      dump_name = char_array_to_string(c_dump_name, strlen(c_dump_name))
+      call dump%init(trim(dump_name)) 
+      bmi_status = BMI_SUCCESS
+   end function dump_init
+
+   function dump_write() result(bmi_status) bind(C, name="dump_write")
+   !DEC$ ATTRIBUTES DLLEXPORT :: dump_write
+      integer(kind=c_int)                  :: bmi_status
+      call dump%dump() 
+      bmi_status = BMI_SUCCESS
+   end function dump_write
+
+   function dump_close() result(bmi_status) bind(C, name="dump_close")
+   !DEC$ ATTRIBUTES DLLEXPORT :: dump_write
+      integer(kind=c_int)                  :: bmi_status
+      call dump%dump() 
+      bmi_status = BMI_SUCCESS
+   end function dump_close
+
  ! -------------------------------------------------------------------------------------------------------------------------------------------
  
    integer(c_int) pure function strlen(char_array)

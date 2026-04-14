@@ -23,6 +23,7 @@ implicit none
    real(kind=hp), allocatable, target    :: phead_array(:,:)
    real(kind=hp), allocatable, target    :: phead_box_array(:,:)
    real(kind=hp), allocatable, target    :: theta_box_array(:,:)      
+   real(kind=hp), allocatable            :: xpos(:), ypos(:)
 
    real(kind=hp), allocatable, target    :: pond_array(:)      
    integer,       allocatable, target    :: nbox_array(:)   ! number of non-submerged boxes           
@@ -68,10 +69,12 @@ contains
           enddo
       end subroutine sss_meteo_update
 
+
       subroutine sss_initComponent()
       integer :: lun, ios, svat_nr
       character(len=200) :: line
-      open(file='area_svat.inp', status='OLD', newunit=lun, iostat=ios)
+!     open(file='area_svat.inp', status='OLD', newunit=lun, iostat=ios)
+      open(file='swap_ini.csv', status='OLD', newunit=lun, iostat=ios)
 
 !     allocate(select_spu(NMAXSPU))
 !     allocate(select_spu(NMAXSPU))
@@ -82,7 +85,7 @@ contains
               read(lun,'(a200)', iostat=ios)  line
               if (ios.ne.0) exit
               if (line(1:1)=='#') cycle
-              read(line(1:10),*) svat_nr
+              read(line(1:10),*) svat_nr, svat_nr
               svat_nr_max = max(svat_nr_max,svat_nr)
           enddo
           allocate(rr_array(svat_nr_max))
@@ -98,6 +101,7 @@ contains
           allocate(nbox_array(svat_nr_max))
           allocate(qmodf_array(svat_nr_max))
           allocate(pond_array(svat_nr_max))      
+          allocate(xpos(svat_nr_max), ypos(svat_nr_max))      
       else
           ! something went wrong opening the area_svat.inp file
           return
@@ -113,7 +117,7 @@ contains
       character(len=500) :: cwdstr
       iter_sss = 0
 
-      ! tbd, read parameters from a parasim.inp file
+      ! tbd, read parameters from a parasim.inp file  DEFAULTS
       parameters%dtgw = 1._hp              ! groundwater timestep
       parameters%dprz = 1._hp              ! rootzone thickness
       parameters%init_gwl = -3._hp         ! initial groundwater level
@@ -148,8 +152,11 @@ contains
           return        ! reading the database went wrong
       endif
 
-      ! read area_svat.inp
-      open(file='area_svat.inp', status='OLD', newunit=lun, iostat=ios)
+!     ! read area_svat.inp
+!     open(file='area_svat.inp', status='OLD', newunit=lun, iostat=ios)
+
+      ! read swap_ini.csv
+      open(file='swap_ini.csv', status='OLD', newunit=lun, iostat=ios)
 
       ! prepare svat data structure
       if (ios==0) then
@@ -162,17 +169,11 @@ contains
           ios=0
           do while(.True.)
               read(lun,'(a200)', iostat=ios)  line
+
               if (ios.ne.0) exit
               if (line(1:1)=='#') cycle
-              read(line(1:10),*) svat_nr
-              read(line(11:20),*) parameters%area            ! area
-              read(line(21:28),*) parameters%top             ! elevation
-              read(line(37:42),*) parameters%spu             ! soil physical unit number
-              read(line(99:110),*) parameters%init_phead     ! initial phead
-              read(line(111:122),*) parameters%init_gwl      ! initial gwl
-              read(line(123:134),*) parameters%dprz          ! rootzone depth
-              read(line(135:142),*) parameters%zmax_ponding  ! ponding reservoir depth
-              read(line(143:150),*) parameters%maxinf        ! infiltration rate limit
+!             call parse_area_svat(line, parameters, svat_nr)      ! MetaSWAP area_svat.inp
+              call parse_swap_ini(line, parameters, svat_nr)       ! SWAP svat_ini.csv
 
               svats(svat_nr)%rr => rr_array(svat_nr)
               svats(svat_nr)%ev => ev_array(svat_nr)
@@ -185,6 +186,10 @@ contains
               svats(svat_nr)%qmodf => qmodf_array(svat_nr)
               svats(svat_nr)%tiop => tiop(1)
               svats(svat_nr)%dtgw => dtgw(1)
+
+              xpos(svat_nr) = parameters%xpos   ! store the position for later in the output
+              ypos(svat_nr) = parameters%ypos
+
               if (.not.svats(svat_nr)%initialize(parameters,dbset,dsset,phead_array(:,svat_nr))) then
                   !report something went wrong initializing 
                   !the sequential steady state instance
@@ -205,6 +210,47 @@ contains
           meteo_new => meteo_2
       endif
       end subroutine sss_initSimulation
+
+      subroutine parse_area_svat(line, parameters, svat_nr)
+          character(len=*), intent(in)    :: line
+          type(t_sssparam), intent(inout) :: parameters
+          integer                         :: svat_nr
+          read(line(1:10),*) svat_nr
+          read(line(11:20),*) parameters%area            ! area
+          read(line(21:28),*) parameters%top             ! elevation
+          read(line(37:42),*) parameters%spu             ! soil physical unit number
+          read(line(99:110),*) parameters%init_phead     ! initial phead
+          read(line(111:122),*) parameters%init_gwl      ! initial gwl
+          read(line(123:134),*) parameters%dprz          ! rootzone depth
+          read(line(135:142),*) parameters%zmax_ponding  ! ponding reservoir depth
+          read(line(143:150),*) parameters%maxinf        ! infiltration rate limit      
+      end subroutine parse_area_svat
+
+      subroutine parse_swap_ini(line, parameters, svat_nr)
+          character(len=*), intent(in)    :: line
+          type(t_sssparam), intent(inout) :: parameters
+          integer,          intent(out)   :: svat_nr
+          integer :: node,svat,soil_id,rotation_id,meteo_id,ct_id
+          real(kind=hp) :: x, y, level, hmf6
+          real(kind=hp) :: area,top,init_gwli,dprz,zmax_ponding,maxinf,soil_resist
+          real(kind=hp) :: init_phead,sw_irrig,rds,pondmx,rsro,rsroexp
+
+          read(line,*) node,svat,x,y,soil_id,rotation_id,meteo_id,ct_id,level, &
+                       hmf6,area,top,init_gwli,dprz,zmax_ponding,maxinf,soil_resist, &
+                       init_phead,sw_irrig,rds,pondmx,rsro,rsroexp
+
+          svat_nr = svat                         ! svat number
+          parameters%area = area                 ! area
+          parameters%top = top                   ! elevation
+          parameters%spu = soil_id               ! soil physical unit number
+          parameters%init_phead = init_phead     ! initial phead
+          parameters%init_gwl = init_gwli        ! initial gwl
+          parameters%dprz = dprz                 ! rootzone depth
+          parameters%zmax_ponding = zmax_ponding ! ponding reservoir depth
+          parameters%maxinf = maxinf             ! infiltration rate limit
+          parameters%xpos = x
+          parameters%ypos = y
+      end subroutine parse_swap_ini
 
       subroutine sss_saveFluxes()
       integer :: k

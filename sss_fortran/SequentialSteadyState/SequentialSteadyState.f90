@@ -16,6 +16,7 @@ implicit none
         real(kind=hp)             :: zmax_ponding ! zmax depth for ponding reservoir
         real(kind=hp)             :: maxinf       ! limiting infiltration rate
         integer(kind=hp)          :: niter        ! standalone test number of iterations
+        real(kind=hp)             :: xpos, ypos   ! metadata: position of the svat
     end type t_sssparam
 
     type :: t_SequentialSteadyState
@@ -130,11 +131,13 @@ contains
         success = .True. 
 
         if (present(dsset)) then
-           dsptr => dsset%dbs(parameters%spu)%ptr
-           ! make mapping of box numbers and node numbers
-           if (allocated(sss%nod2box)) deallocate(sss%nod2box)
-           allocate(sss%nod2box(dsptr%nnod))
-           call nodes2boxes(dsptr%dz, sss%unsa%unsa_db%hbotb, sss%nod2box)
+           if (associated(dsset%dbs(parameters%spu)%ptr)) then 
+              dsptr => dsset%dbs(parameters%spu)%ptr
+              ! make mapping of box numbers and node numbers
+              if (allocated(sss%nod2box)) deallocate(sss%nod2box)
+              allocate(sss%nod2box(dsptr%nnod))
+              call nodes2boxes(dsptr%dz, sss%unsa%unsa_db%hbotb, sss%nod2box)
+           endif
         endif
     end function t_SequentialSteadyState_initialize
 
@@ -194,19 +197,25 @@ contains
         sss%dtgw = dt
         sss%rr = nraidt / m2cm
         sss%ev = peva / m2cm
-        call sss%ponding%addPrecip(sss%rr)
-        sss%qrch = sss%ponding%getInfiltration(sss%gwl)
-        call sss%soil%update(sss%qrch, sss%ev, sss%dtgw)
-        if ((sss%ponding%volume > 0._hp) .or. (sss%gwl > sss%unsa%top)) then
-            sss%evpond = sss%ponding%getPondingEvap(sss%ev)
-            call sss%soil%reset()
-            sss%evsoil = 0._hp
-        else
-            sss%evsoil = sss%soil%getActualEvap()
-            sss%evpond = 0._hp
-        endif
         sss%qrot = qrot / m2cm
-        sss%qrch = sss%qrch - sss%qrot - sss%evsoil
+
+        if (ja_top) then
+           call sss%ponding%addPrecip(sss%rr)
+           sss%qrch = sss%ponding%getInfiltration(sss%gwl)
+           call sss%soil%update(sss%qrch, sss%ev, sss%dtgw)
+           if ((sss%ponding%volume > 0._hp) .or. (sss%gwl > sss%unsa%top)) then
+               sss%evpond = sss%ponding%getPondingEvap(sss%ev)
+               call sss%soil%reset()
+               sss%evsoil = 0._hp
+           else
+               sss%evsoil = sss%soil%getActualEvap()
+               sss%evpond = 0._hp
+           endif
+           sss%qrch = sss%qrch - sss%qrot - sss%evsoil
+        else                ! force qrch equal to incoming preciptation and evsoil equal to incoming potatial evap
+           sss%evsoil = peva
+           sss%qrch = sss%rr - sss%qrot - sss%evsoil 
+        endif 
         call sss%do_unsa()
     end subroutine t_SequentialSteadyState_prepare
 

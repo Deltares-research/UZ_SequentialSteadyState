@@ -5,6 +5,8 @@ implicit none
         real(kind=hp), parameter :: DMISS  = -999._hp        
         real(kind=hp)            :: m2cm = 100._hp
         real(kind=hp)            :: eps = 0.1e-6_hp
+        logical                  :: ja_top = .False.      ! .TRUE. keep track of ponding and poinding infilt/evap as part of the top process
+                                                          ! .FALSE. The recharge flux qrch equal incoming precip, actual evap equals incomping PET
 
     interface realloc
         module procedure realloc1d_real

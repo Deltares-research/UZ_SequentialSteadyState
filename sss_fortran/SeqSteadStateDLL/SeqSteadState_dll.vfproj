@@ -27,7 +27,7 @@
 			<Tool Name="VFPostBuildEventTool" CommandLine="xcopy /Y/Q ..\..\ossdeltares\MPICHDLL\*.dll $(OutDir)"/>
 			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
 		</Configuration>
-		<Configuration Name="Debug|x64" UseCompiler="ifortCompiler" OutputDirectory="D:\leander\imod_collector\seqsteadystate" TargetName="SeqSteadyState" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Debug|x64" UseCompiler="ifortCompiler" OutputDirectory="D:\leander\imod_collector\seqsteadystate\dbg" TargetName="SeqSteadyState" ConfigurationType="typeDynamicLibrary">
 			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\bmi" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
 			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\netcdf\netCDF 4.6.1\lib" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="netcdf.lib"/>
 			<Tool Name="VFResourceCompilerTool"/>
@@ -58,11 +58,16 @@
 			<File RelativePath="..\SequentialSteadyState\database_io.f90"/>
 			<File RelativePath="..\SequentialSteadyState\database_utils.f90"/>
 			<File RelativePath="..\SequentialSteadyState\downscaling.f90"/>
-			<File RelativePath="..\SequentialSteadyState\globals.f90"/>
+			<File RelativePath="..\SequentialSteadyState\dump_results.f90"/>
+			<File RelativePath="..\SequentialSteadyState\globals.f90">
+			</File>
 			<File RelativePath="..\SequentialSteadyState\ponding.f90"/>
-			<File RelativePath="..\SequentialSteadyState\SequentialSteadyState.f90"/>
-			<File RelativePath=".\SequentialSteadyState_bmi.f90"/>
-			<File RelativePath="..\SequentialSteadyState\sss_comp.f90"/>
+			<File RelativePath="..\SequentialSteadyState\SequentialSteadyState.f90">
+			</File>
+			<File RelativePath=".\SequentialSteadyState_bmi.f90">
+			</File>
+			<File RelativePath="..\SequentialSteadyState\sss_comp.f90">
+			</File>
 			<File RelativePath="..\SequentialSteadyState\UnsaturatedZone.f90"/>
 		</Filter>
 		<File RelativePath=".\ReadMe.txt"/>
