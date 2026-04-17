@@ -219,6 +219,7 @@ subroutine t_dumpnc_multi_dump(self)
    self%ierr = nf90_put_var(self%ncid, self%varid_pond,  pond_array,   start=(/1,self%count/), count=(/svat_nr_max,1/)) 
    self%ierr = nf90_put_var(self%ncid, self%varid_nbox,  nbox_array,   start=(/1,self%count/), count=(/svat_nr_max,1/)) 
    self%ierr = nf90_put_var(self%ncid, self%varid_time, tiop(1), start=(/self%count/)) 
+   self%ierr = nf90_sync(self%ncid)
 end subroutine t_dumpnc_multi_dump
 
 subroutine t_dumpnc_multi_close(self)

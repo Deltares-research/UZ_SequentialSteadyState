@@ -81,6 +81,9 @@ contains
       integer(kind=c_int)     :: bmi_status
       real(kind=c_double)     :: time 
       call sss_finishTimestep()   ! time should be current time
+      if (jadump) then
+          call dump%dump()
+      endif
       bmi_status = BMI_SUCCESS
    end function bmi_finalize_timestep
 
@@ -101,9 +104,6 @@ contains
    !DEC$ ATTRIBUTES DLLEXPORT :: bmi_update
       integer(kind=c_int)      :: bmi_status
       bmi_status = BMI_FAILURE
-      if (jadump) then
-          call dump%dump()
-      endif
    end function bmi_update
 
    function bmi_finalize() result(bmi_status) bind(C, name="finalize")

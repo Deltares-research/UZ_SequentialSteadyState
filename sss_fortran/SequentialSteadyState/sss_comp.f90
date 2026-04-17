@@ -41,12 +41,31 @@ implicit none
 
 
     type t_meteo
+        integer       :: lun_meteo ! unit number for meteo
+        integer       :: nstn = 0
+        integer       :: ntime = 0
         real(kind=hp) :: time
-        real(kind=hp) :: rr
-        real(kind=hp) :: ev
+        real(kind=hp), allocatable :: rr(:)
+        real(kind=hp), allocatable :: ev(:)
     end type t_meteo
     type(t_meteo), target  :: meteo_1, meteo_2
     type(t_meteo), pointer :: meteo_new, meteo_old
+
+    type t_meteo_nc
+        integer       :: ncid
+        integer       :: dimid_stn = 0
+        integer       :: dimid_time = 0
+        integer       :: varid_time = 0
+        integer       :: varid_rr = 0
+        integer       :: varid_ev = 0
+        integer       :: nstn = 0
+        integer       :: ntime = 0
+        real(kind=hp) :: time
+        real(kind=hp), allocatable :: rr(:)
+        real(kind=hp), allocatable :: ev(:)
+    contains
+        procedure, pass :: init => t_meteo_nc_init          ! Read database contents from netCDF4 files
+    end type t_meteo_nc
 
 !   type t_boxvalues
 !      integer                    :: nbox 
@@ -62,7 +81,7 @@ contains
           type(t_meteo), pointer :: ptr
           integer :: yr
           do while (tiop(1) >= meteo_new%time)
-              ptr => meteo_old
+              ptr => meteo_old   
               meteo_old => meteo_new
               meteo_new => ptr
               read(lun_meteo,'(a200)') line_meteo
@@ -198,6 +217,11 @@ contains
               endif
           enddo
           close(lun)
+
+
+          ! meteo from netcdf, multiple time series,
+
+          ! meteo from csv, single time series
           open(file='mete_svat.inp', status='OLD', newunit=lun_meteo, iostat=ios)
           if (ios/=0) then
              write(0,*) 'Problem opening mete_svat.inp for mete input'
@@ -316,5 +340,45 @@ contains
           nbox_array(k) = svats(k)%unsa%maxbox
       enddo
       end subroutine sss_solve
+
+      subroutine t_meteo_nc_init(self, filname)
+      class(t_meteo_nc) :: self
+      character(len=*), intent(in) :: filname
+      integer :: ierr, dimid_time, dimid_stn
+      ierr = nf90_open(trim(filname), NF90_NOWRITE, self%ncid)           ! open meteo stations file in netcdf    
+      ierr = nf90_inq_dimid(self%ncid,'time',dimid_time)
+      ierr = nf90_inq_dimid(self%ncid,'stn',dimid_stn)
+      ierr = nf90_inquire_dimension(self%ncid, dimid_stn, len=self%nstn)      ! obtain the number of stations
+      ierr = nf90_inquire_dimension(self%ncid, dimid_time, len=self%ntime)    ! obtain the number of time levels (unbounded dimension)
+      ierr = nf90_inq_varid(self%ncid,'time',self%varid_time)                 ! time variable id
+      ierr = nf90_inq_varid(self%ncid,'rr',self%varid_rr)                     ! rainfall variable id
+      ierr = nf90_inq_varid(self%ncid,'ev',self%varid_ev)                     ! potential eval variable id
+      allocate(self%field0)                                                   ! allocate and init two meteo fields
+      call self%field0%init(timelvl=0)
+      allocate(self%field1)
+      call self%field0%init(timelvl=1)
+     
+
+      end subroutine t_meteo_nc_init
+
+      subroutine t_meteo_nc_read(self)
+      end subroutine t_meteo_nc_read
+
+      subroutine t_meteo_field_init(self, ncid, nstn, varid_rr, varid_ev, varid_time, timelvl )
+      class(t_meteo_field) :: self
+      integer, intent(in) :: ncid, varid_rr, varid_ev, varid_time, timelvl
+      self%ncid = ncid
+      self%nstn = nstn
+      self%varid_rr = varid_rr
+      self%varid_ev = varid_ev 
+      self%varid_time = varid_time 
+      self%timelvl = timelvl
+      allocate(self%rr(self%nstn))
+      allocate(self%ev(self%nstn))
+      ierr = nf90_get_var(ncid, self%varid_rr, self%rr(:), start = (/1,self%timelvl/), count = (/self%nstn,1/))   ! retrieve rainfall for this timelevel
+      ierr = nf90_get_var(ncid, self%varid_ev, self%ev(:), start = (/1,self%timelvl/), count = (/self%nstn,1/))   ! retrieve evap for this timelevel
+      ierr = nf90_get_var(ncid, self%varid_time, self%time, start = (/1,self%timelvl/), count = (/1/))            ! set the time for this level
+      end subroutine t_meteo_field_init
+
 
 end module sss_comp

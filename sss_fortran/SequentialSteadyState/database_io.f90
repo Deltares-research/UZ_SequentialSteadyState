@@ -38,6 +38,7 @@ integer, parameter :: NMAXRZ = 31
         real(kind=hp)   , allocatable :: ptb(:)
     contains
         procedure, pass :: readNC => t_database_readNC          ! Read database contents from netCDF4 files
+        procedure, pass :: openNC => t_database_openNC          ! open a database nc-file by path, spu and rootzone thickness
         procedure, pass :: sigma2phi => t_database_sigma2phi    ! Lookup phi index in svtb-qmrtb*dtgw given index gamma and sigma
         procedure, pass :: sv2phi => t_database_sv2phi          ! Lookup phi index in svtb given index gamma and sv
         procedure, pass :: dpgw2gamma => t_database_dpgw2gamma  ! groundwater depth to index gamma
@@ -79,7 +80,7 @@ contains
     
         character(len=:), allocatable :: filname
         character(len=60) :: regel
-        character(len=7) dum
+        character(len=7)  :: dum
         integer :: ncid, lun
         integer :: spu, rz, idrz
         integer :: ierr
@@ -167,6 +168,21 @@ contains
             dbptr => null()
         endif
     end function t_databaseSet_getDbPtr
+
+    function t_database_openNC(db,dbpath,spu,drz) result (ncid)
+        integer                             :: ncid
+        class(t_database), intent(inout)    :: db
+        character(len=*),     intent(in)    :: dbpath
+        integer,              intent(in)    :: spu
+        real(kind=hp),        intent(in)    :: drz
+
+        character(len=:), allocatable :: filname
+        character(len=7)              :: dum
+        integer                       :: ierr 
+        write(dum,'(i3.3,a,i3.3)') spu, '_', nint(drz*100)
+              filname=trim(dbpath)//'/unsa_'//dum//'.nc'
+        ierr = nf90_open(trim(filname), NF90_NOWRITE, ncid)
+    end function t_database_openNC
 
     function t_database_readNC(db,ncid) result (success)
         logical :: success
