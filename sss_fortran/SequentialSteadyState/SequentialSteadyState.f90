@@ -213,6 +213,7 @@ contains
            endif
            sss%qrch = sss%qrch - sss%qrot - sss%evsoil
         else                ! force qrch equal to incoming preciptation and evsoil equal to incoming potatial evap
+                            ! ja_top = .False. skips the ponding and evap part on the top of the svat
            sss%evsoil = peva
            sss%qrch = sss%rr - sss%qrot - sss%evsoil 
         endif 
