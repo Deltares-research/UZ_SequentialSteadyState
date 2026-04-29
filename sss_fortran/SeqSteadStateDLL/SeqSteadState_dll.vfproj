@@ -59,13 +59,11 @@
 			<File RelativePath="..\SequentialSteadyState\database_utils.f90"/>
 			<File RelativePath="..\SequentialSteadyState\downscaling.f90"/>
 			<File RelativePath="..\SequentialSteadyState\dump_results.f90"/>
-			<File RelativePath="..\SequentialSteadyState\globals.f90">
-			</File>
+			<File RelativePath="..\SequentialSteadyState\globals.f90"/>
+			<File RelativePath="..\SequentialSteadyState\meteo.f90"/>
 			<File RelativePath="..\SequentialSteadyState\ponding.f90"/>
-			<File RelativePath="..\SequentialSteadyState\SequentialSteadyState.f90">
-			</File>
-			<File RelativePath=".\SequentialSteadyState_bmi.f90">
-			</File>
+			<File RelativePath="..\SequentialSteadyState\SequentialSteadyState.f90"/>
+			<File RelativePath=".\SequentialSteadyState_bmi.f90"/>
 			<File RelativePath="..\SequentialSteadyState\sss_comp.f90">
 			</File>
 			<File RelativePath="..\SequentialSteadyState\UnsaturatedZone.f90"/>

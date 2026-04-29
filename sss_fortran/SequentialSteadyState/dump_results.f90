@@ -166,6 +166,11 @@ subroutine t_dumpnc_dump(self, time, results)
    self%ierr = nf90_put_var(self%ncid, self%varid_phnode, results%phnode(:), start=(/1,self%count/), count=(/nnod,1/)) 
    self%ierr = nf90_put_var(self%ncid, self%varid_thnode, results%thnode(:), start=(/1,self%count/), count=(/nnod,1/)) 
    self%ierr = nf90_put_var(self%ncid, self%varid_time, time,start=(/self%count/)) 
+
+   if (self%ncid>0 .and. ja_flush) then
+       self%ierr = nf90_sync(self%ncid)
+   endif
+   
 end subroutine t_dumpnc_dump
 
 subroutine t_dumpnc_close(self)

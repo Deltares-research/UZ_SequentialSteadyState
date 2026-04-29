@@ -16,6 +16,7 @@ integer, parameter :: NMAXRZ = 31
         integer                                  :: nbox = 0
     contains
         procedure, pass :: readNCset => t_databaseSet_readNCset          ! Read database contents from netCDF4 files
+        procedure, pass :: readSingleNC => t_databaseSet_readSingleNC    ! read a single netcdf into this set
         procedure, pass :: getDbPtr => t_databaseSet_getDbPtr            ! Return pointer to database instance within database set
     end type t_databaseSet
 
@@ -121,32 +122,55 @@ contains
               endif
            endif
            do rz=1, NMAXRZ
-!             write(dum,'(i3.3,a,i3.3)') spu, '_', rz
-              write(dum,'(i3.3,a,i3.3)') spu, '_', nint(dbset%rzdepth(rz)*100)
-              filname=trim(dbset%unsa_path)//'/unsa_'//dum//'.nc'
-              ierr = nf90_open(trim(filname), NF90_NOWRITE, ncid)
-              if (ierr.eq.NF90_NOERR) then
-                 write(0,*) 'reading '//filname//' ...' 
-                 ! create database instance
-                 allocate(db)
-                 if (.not.db%readNC(ncid)) then
-                     return           ! problem occurred reading this particular database
-                 endif
-                 db%dbpath = filname
-                 ! ToDo:check if root zone depth of the file matches with the expected depth
-                 if (abs(db%dprzsl-dbset%rzdepth(rz))>1.e-3_hp) then
-                    ! non-matching rz 
-                 endif
-                 dbset%dbs(rz,spu)%ptr => db
-                 dbset%nbox = max(dbset%nbox,db%nbox)
-                 db%irz = rz
-                 db%spu = spu
+              if (.not.dbset%readSingleNC(spu, rz)) then
+                 return           ! problem occurred reading this particular database
               endif
-              ierr = nf90_close(ncid) ! close open netcdf file
            enddo ! rootzones on nc-files
         enddo ! soiltypes on nc-files
         success = .True.
     end function t_databaseSet_readNCset
+
+    function t_databaseSet_readSingleNC(dbset, spu, rz) result (success)
+        logical :: success
+        class(t_databaseSet), intent(inout) :: dbset
+        integer,              intent(in)    :: spu ! soil physical unit
+        integer,              intent(in)    :: rz  ! rootzone depth number
+    
+        character(len=:), allocatable :: filname
+        character(len=60) :: regel
+        character(len=7)  :: dum
+        integer :: ncid, lun
+        integer :: idrz
+        integer :: ierr
+        logical :: exists
+        class(t_database), pointer :: db => null()
+        real(kind=hp) :: drz
+    
+        success = .False.
+        drz = dbset%rzdepth(rz)
+        write(dum,'(i3.3,a,i3.3)') spu, '_', nint(drz*100)
+        filname=trim(dbset%unsa_path)//'/unsa_'//dum//'.nc'
+        ierr = nf90_open(trim(filname), NF90_NOWRITE, ncid)
+        if (ierr.eq.NF90_NOERR) then
+           write(0,*) 'reading '//filname//' ...' 
+           ! create database instance
+           allocate(db)
+           if (.not.db%readNC(ncid)) then
+               return           ! problem occurred reading this particular database
+           endif
+           db%dbpath = filname
+           ! ToDo:check if root zone depth of the file matches with the expected depth
+           if (abs(db%dprzsl-dbset%rzdepth(rz))>1.e-3_hp) then
+              ! non-matching rz 
+           endif
+           dbset%dbs(rz,spu)%ptr => db
+           dbset%nbox = max(dbset%nbox,db%nbox)
+           db%irz = rz
+           db%spu = spu
+        endif
+        ierr = nf90_close(ncid) ! close open netcdf file
+        success = .True.
+    end function t_databaseSet_readSingleNC
 
     function t_databaseSet_getDbPtr(dbset, sl_tgt, drz) result (dbptr)
         type(t_database),     pointer       :: dbptr ! pointer to database instance within the database set
@@ -163,6 +187,14 @@ contains
             endif
         enddo
         if ((sl_tgt>0) .and. (rz_tgt>0)) then
+            if (.not.associated(dbset%dbs(rz_tgt, sl_tgt)%ptr)) then
+               ! this database was not loaded; attempt to load it now
+               ! NB. if this works ok, skip the loading of all txhe netcdf files in the database path
+               !     so that only the referred database parts are load into memory
+               if (.not.dbset%readSingleNC(sl_tgt,rz_tgt)) then
+                continue
+               endif
+            endif
             dbptr => dbset%dbs(rz_tgt, sl_tgt)%ptr
         else
             dbptr => null()

@@ -7,6 +7,7 @@ implicit none
         real(kind=hp)            :: eps = 0.1e-6_hp
         logical                  :: ja_top = .False.      ! .TRUE. keep track of ponding and poinding infilt/evap as part of the top process
                                                           ! .FALSE. The recharge flux qrch equal incoming precip, actual evap equals incomping PET
+        logical                  :: ja_flush = .False.    ! .TRUE. sync netcdf dump file every timestep
 
         character(len=*), parameter :: dumpfile = 'd:\leander\temp\sss_dump.nc'                                            
         logical :: jadump

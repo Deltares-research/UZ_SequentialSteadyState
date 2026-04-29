@@ -48,7 +48,9 @@ contains
    function bmi_initialize() result(bmi_status) bind(C, name="initialize")
       !DEC$ ATTRIBUTES DLLEXPORT :: bmi_initialize
       integer(kind=c_int)      :: bmi_status
-      soilselect = 1        ! temporary: set all soil types active
+!     soilselect = 1        ! temporary: set all soil types active
+      soilselect = 0        ! temporary: set all soil types inactive
+      soilselect(1) = 1     ! temporary: we need one to have an idea of the number of boxes vertically
       select_spu = (soilselect>0)
       call sss_initComponent()
       ! open output (todo: make optional through bmi)
