@@ -180,8 +180,9 @@ contains
         integer                             :: rz_tgt, irz 
         real(kind=hp), parameter :: tol=1.0d-5
         rz_tgt = 0
+        ! take the first database with a rootzone depth >= drz
         do irz=1,size(dbset%rzdepth)
-            if (abs(dbset%rzdepth(irz)-drz)<=tol) then
+            if (drz <= dbset%rzdepth(irz)) then
                 rz_tgt = irz
                 exit
             endif

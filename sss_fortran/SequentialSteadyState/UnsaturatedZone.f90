@@ -290,7 +290,7 @@ contains
         lgam = lbound(uz%unsa_db%pheadtb,dim=2)
         lphi = lbound(uz%unsa_db%pheadtb,dim=3)
         do ibox=1,min(size(phead_box),uz%nbox)
-           phead_box(ibox) = bilinear(uz%unsa_db%pheadtb(ibox,:,:),uz%gam,uz%phi(ibox),lgam,lphi)
+           phead_box(ibox) = bilinear(uz%unsa_db%pheadtb(ibox,:,:),uz%gam,uz%phi(ibox),lgam,lphi) * m2cm
         enddo
     end subroutine t_unsa_get_pressure_head
 end module unsaturated_zone

@@ -185,8 +185,8 @@ contains
         integer,       intent(in)  :: sy
         integer :: ix, iy
         real(kind=hp) :: fx, fy
-        ix = floor(cx) 
-        iy = floor(cy)
+        ix = max(sx, floor(cx))
+        iy = max(sy, floor(cy))
         fx = cx - ix
         fy = cy - iy
         z = bilinear4(tb,ix,iy,fx,fy,sx,sy)

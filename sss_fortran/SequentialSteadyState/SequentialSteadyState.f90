@@ -214,7 +214,9 @@ contains
            sss%qrch = sss%qrch - sss%qrot - sss%evsoil
         else                ! force qrch equal to incoming preciptation and evsoil equal to incoming potatial evap
                             ! ja_top = .False. skips the ponding and evap part on the top of the svat
-           sss%evsoil = peva
+           sss%evsoil = peva / m2cm
+           sss%soil%evac = peva / m2cm
+           sss%evpond = 0.0d0
            sss%qrch = sss%rr - sss%qrot - sss%evsoil 
         endif 
         call sss%do_unsa()
