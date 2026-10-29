@@ -1,0 +1,30 @@
+# File written with iMOD Python version: 1.0.0rc5
+
+begin options
+  print_option summary
+end options
+
+begin nonlinear
+  outer_dvclose 0.001
+  outer_maximum 150
+  under_relaxation dbd
+  under_relaxation_theta 0.9
+  under_relaxation_kappa 0.001
+  under_relaxation_gamma 0.0
+  under_relaxation_momentum 0.0
+  backtracking_number 0
+  backtracking_tolerance 0.0
+  backtracking_reduction_factor 0.0
+  backtracking_residual_limit 0.0
+end nonlinear
+
+begin linear
+  inner_maximum 30
+  inner_dvclose 0.0001
+  inner_rclose 1.0 strict
+  linear_acceleration bicgstab
+  relaxation_factor 0.97
+  preconditioner_levels 0
+  preconditioner_drop_tolerance 0.0
+  number_orthogonalizations 0
+end linear

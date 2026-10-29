@@ -1,0 +1,18 @@
+Reference data for the SSS DLL coupled test (qrch 0.0026 x30, 0 x10, 0.0032 x30, 0.0026 x250 m/d; 300 steps, dt 1 d)
+Copied on 2026-10-29.
+
+metaswap/head_layer1.csv
+  MetaSWAP-coupled MF6 head, layer 1 (m), end of step, td 1..300.
+  Read from c:\werkmap\coupler_model\mf6_model\flow.hds (29-10-2026 11:47:54).
+metaswap/svat_per_0000000001.csv
+  MetaSWAP svat output (column sc1(m3/m2/m) = sc1). From c:\werkmap\coupler_model\metaswap\msw\csv\ (same timestamp as flow.hds).
+
+python/dt_run_1_n300.npz       MegaSWAP Python, standard coupled run (run_coupled_model), 300 steps.
+python/dt_exp_1_split_n300.npz MegaSWAP Python, experimental split_ig_direction run (cap 100), 300 steps.
+  Produced 2026-10-29 from c:\src\MegaSWAP (base commit 9a0278f plus uncommitted working-tree changes in
+  src/*.py). keys: mf6_head, sc1_used, pre_vsim, pre_ds, niter, ... ; in the split file niter is -1 and the
+  outer iteration count is in it_n.
+  Python index = td - 1.
+
+Model input used by run_sss_coupled.py: ../data/mf6_model (MegaSWAP mf6_model inputs only, no outputs) and
+../data/unsa_db (unsa_001_100.nc from c:\werkmap\coupler_model\metaswap\unsa_nc3, nodes_001.nc from MegaSWAP\database).

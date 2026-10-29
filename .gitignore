@@ -1,0 +1,2 @@
+# prebuilt netcdf-fortran binaries (.lib/.mod) used only by the local driver\build_dll.bat; the sln builds from netcdf-fortran-4.4.4
+/netcdf/netcdf-fortran/

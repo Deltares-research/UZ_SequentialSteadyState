@@ -8,6 +8,9 @@ implicit none
         logical                  :: ja_top = .False.      ! .TRUE. keep track of ponding and poinding infilt/evap as part of the top process
                                                           ! .FALSE. The recharge flux qrch equal incoming precip, actual evap equals incomping PET
         logical                  :: ja_flush = .False.    ! .TRUE. sync netcdf dump file every timestep
+        logical                  :: ja_split_ig = .True.  ! .TRUE. ds is evaluated at the current table position (gam) using the frozen
+                                                          ! start-of-step profile phi0; the table movement is carried by sc1 only
+                                                          ! .FALSE. sv0 stays at the previous table position (table movement in ds and sc1)
 
         character(len=*), parameter :: dumpfile = 'd:\leander\temp\sss_dump.nc'                                            
         logical :: jadump

@@ -11,6 +11,7 @@ implicit none
         real(kind=hp), allocatable :: sv(:), sv0(:)
         real(kind=hp), pointer     :: phead(:) => null()
         real(kind=hp), allocatable :: phi(:)
+        real(kind=hp), allocatable :: phi0(:)         ! profile (phi) at the end of the previous timestep
         real(kind=hp), pointer     :: dt => null()
         real(kind=hp)              :: gam
         real(kind=hp)              :: top
@@ -71,6 +72,7 @@ contains
         if (.not.realloc(uz%sv,1,uz%nbox)) return
         if (.not.realloc(uz%sv0,1,uz%nbox)) return
         if (.not.realloc(uz%phi,1,uz%nbox)) return
+        if (.not.realloc(uz%phi0,1,uz%nbox)) return
         if (.not.realloc(uz%storage,1,uz%nbox)) return
         if (.not.realloc(uz%submerged,1,uz%nbox)) return
         uz%storage = 0.
@@ -93,6 +95,7 @@ contains
             ! set fluxes qmv(:)
             uz%qmv(ibox) = bilinear(uz%unsa_db%qmrtb(:,:),uz%gam,uz%phi(ibox),lgam,lphi)
         enddo
+        uz%phi0(:) = uz%phi(:)
         success = .True.
     end function t_unsa_init
 
@@ -102,13 +105,14 @@ contains
         real(kind=hp), intent(in)               :: qrch             ! recharge flux topmost box
         real(kind=hp), intent(in)               :: gwl              ! groundwater level
 
-        real(kind=hp) :: sigma, qin, gam_local
+        real(kind=hp) :: sigma, qin, gam_local, sv0i
         integer :: ibox, lgam, lphi
 
         uz%gam = uz%gwl2gamma(gwl)
         uz%maxbox = uz%nonsubmerged(gwl) 
         lgam = lbound(uz%unsa_db%svtb, dim=2)  
         lphi = lbound(uz%unsa_db%svtb, dim=3)
+        dsv = 0._hp
 
         do ibox=1, uz%maxbox
 !           uz%phi(ibox) = phead2ndx(uz%phead(ibox),uz%unsa_db%ddpptb)
@@ -118,7 +122,14 @@ contains
             else
                 qin = uz%qmv(ibox-1)
             endif
-            sigma = uz%sv0(ibox) - qin * uz%dt
+            if (ja_split_ig) then
+                ! old storage at the current table position with the frozen start-of-step profile,
+                ! so ds only holds the response in the phi direction
+                sv0i = bilinear(uz%unsa_db%svtb(ibox,:,:),gam_local,uz%phi0(ibox),lgam,lphi)
+            else
+                sv0i = uz%sv0(ibox)
+            endif
+            sigma = sv0i - qin * uz%dt
             call uz%unsa_db%sigma2phi(sigma, uz%phi(ibox), uz%gam, uz%dt, ibox, default=uz%phi(ibox))
             if (uz%phi(ibox)<0) then
                 uz%phead(ibox) = linear(uz%unsa_db%ptb,uz%phi(ibox),lphi)
@@ -126,17 +137,11 @@ contains
                 uz%phead(ibox) = -(10**(uz%phi(ibox)*uz%unsa_db%ddpptb))/m2cm
             endif
 
-            if (ibox==1) then
-               uz%qmv(ibox) = (uz%sv(ibox) - uz%sv0(ibox))/uz%dt - qrch
-            else
-               uz%qmv(ibox) = (uz%sv(ibox) - uz%sv0(ibox))/uz%dt + uz%qmv(ibox-1) 
-            endif
-
             uz%sv(ibox) = bilinear(uz%unsa_db%svtb(ibox,:,:),gam_local,uz%phi(ibox),lgam,lphi)
 
-            uz%qmv(ibox) = (uz%sv(ibox) - uz%sv0(ibox))/uz%dt + qin
+            uz%qmv(ibox) = (uz%sv(ibox) - sv0i)/uz%dt + qin
+            dsv = dsv + (uz%sv(ibox) - sv0i)
         enddo
-        dsv = (sum(uz%sv(1:uz%maxbox))-sum(uz%sv0(1:uz%maxbox)))
 
         ! default head, gwl dependend, for submerged boxes 
         uz%phead(uz%maxbox+1:) = (gwl - uz%top) + 0.5_hp * uz%unsa_db%dprzsl
@@ -166,7 +171,7 @@ contains
         real(kind=hp) ::sv0, sv1, gwl0, gwl1, dgamma
         real(kind=hp), parameter :: sc1_min = 1.e-04_hp
         real(kind=hp) :: gamma0, gamma1,lgam, ugam
-        logical, parameter :: newinterp = .True.
+        logical, parameter :: newinterp = .False.
         dgamma = 0.5_hp
 
         if (newinterp) then
@@ -240,6 +245,7 @@ contains
         ! for submerged boxes automatically phead becomes equal to the deepest non-submerged box
         ! uz%phead(lastbox+1:nbox) = uz%phead(lastbox) ! copy the value of the deepest non-submerged box to submerged boxes.
         uz%sv0(:) = uz%sv(:)
+        uz%phi0(:) = uz%phi(:)
     end subroutine t_unsa_finalize_timestep
 
     function t_unsa_nonsubmerged(uz,gwl) result (maxbox)

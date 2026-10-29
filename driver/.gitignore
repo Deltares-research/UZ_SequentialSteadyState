@@ -1,0 +1,6 @@
+build/
+build_dll.bat
+run/
+results/
+.mypy_cache/
+__pycache__/
