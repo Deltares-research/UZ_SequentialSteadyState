@@ -15,7 +15,7 @@ integer, parameter :: NMAXRZ = 31
         type(t_databaseptr), allocatable         :: dbs(:,:)             ! 2D-array of pointers to database instances
         integer                                  :: nbox = 0
     contains
-        procedure, pass :: readNCset => t_databaseSet_readNCset          ! Read database contents from netCDF4 files
+        procedure, pass :: readNCset => t_databaseSet_readNCset          ! Read database contents from netCDF4 files (or only the rootzone table, lazy = .True.)
         procedure, pass :: readSingleNC => t_databaseSet_readSingleNC    ! read a single netcdf into this set
         procedure, pass :: getDbPtr => t_databaseSet_getDbPtr            ! Return pointer to database instance within database set
     end type t_databaseSet
@@ -73,11 +73,12 @@ contains
     endif
     end function
 
-    function t_databaseSet_readNCset(dbset, unsa_path, select_spu) result (success)
+    function t_databaseSet_readNCset(dbset, unsa_path, select_spu, lazy) result (success)
         logical :: success
         class(t_databaseSet), intent(inout) :: dbset
         character(*),         intent(in)    :: unsa_path
         logical, optional,    intent(in)    :: select_spu(:) ! logical array of selected soil types
+        logical, optional,    intent(in)    :: lazy          ! .True.: read only rootzones.txt; getDbPtr reads a database on first use
     
         character(len=:), allocatable :: filname
         character(len=60) :: regel
@@ -112,6 +113,16 @@ contains
            close(lun)
         else
            return ! unsuccesfull, missing rootzone depths table rootzones.txt
+        endif
+
+        ! lazy: the databases are read one by one by getDbPtr, when an instance first refers to them, so that only the
+        ! (soil type, rootzone depth) combinations in use are held in memory instead of all rootzone depths of every
+        ! selected soil type
+        if (present(lazy)) then
+           if (lazy) then
+              success = .True.
+              return
+           endif
         endif
 
         ! read table contents from files
